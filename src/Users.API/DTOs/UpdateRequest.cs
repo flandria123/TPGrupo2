@@ -6,7 +6,7 @@ namespace Users.API.DTOs
     {
         public record UpdateItemRequest(
 
-           [Required] string Name,
+           [Required] string Nombre,
            [Required] string Apellido,
           [Required] string Email,
           [Required] string Password

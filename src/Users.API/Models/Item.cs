@@ -6,7 +6,7 @@ namespace Users.API.Models
     {
 
         public Guid Id { get; init; }
-        [Required] public string Name { get; init; }
+        [Required] public string Nombre { get; init; }
         [Required] public string Apellido { get; init; }
         [Required] public string Email { get; init; }
         public string PasswordHash { get; init; }
