@@ -19,7 +19,7 @@ public partial class Program
        using (var scope = app.Services.CreateScope())
         
             scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        //   logger.LogError("OK");
+            //logger.LogError("OK");
 
         
         app.UseAppMiddleware();
