@@ -1,4 +1,4 @@
-﻿namespace Users.API.Services.Extensions;
+﻿namespace Users.API.Extensions;
 
 using Serilog;
 using Serilog.Events;

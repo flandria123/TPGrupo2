@@ -3,7 +3,7 @@ using Serilog.Events;
 
 // se configura el middleware que intercepta cada request HTTP y genera el evento de log:
 
-namespace Users.API.Services.Extensions
+namespace Users.API.Extensions
 {
     public static class MiddlewareExtensions
     {
