@@ -1,7 +1,7 @@
 ﻿namespace Users.API.DTOs
 {
-    public class Response
-    {
+    
+    
         public record UserResponse(
 
             Guid Id,
@@ -15,5 +15,5 @@
             );
 
 
-    }
+    
 }

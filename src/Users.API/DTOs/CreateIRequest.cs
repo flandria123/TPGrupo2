@@ -2,8 +2,8 @@
 
 namespace Users.API.DTOs
 {
-    public class CreateIRequest
-    {
+    
+    
         public record CreateItemRequest(
             [Required] string Nombre,
             [Required] string Apellido,
@@ -14,5 +14,5 @@ namespace Users.API.DTOs
 
        
 
-    }
+    
 }

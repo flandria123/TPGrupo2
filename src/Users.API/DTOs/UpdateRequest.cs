@@ -2,8 +2,8 @@
 
 namespace Users.API.DTOs
 {
-    public class UpdateRequest
-    {
+    
+    
         public record UpdateItemRequest(
 
            [Required] string Nombre,
@@ -16,5 +16,5 @@ namespace Users.API.DTOs
 
 
 
-    }
+    
 }

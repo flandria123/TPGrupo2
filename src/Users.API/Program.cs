@@ -74,6 +74,7 @@ public partial class Program
         app.UseAppMiddleware();
         //app.MapAppEndpoints();
         app.UseHttpsRedirection();
+        app.UseExceptionHandler();
         app.UseAuthorization();
         app.MapControllers();
         app.Run();

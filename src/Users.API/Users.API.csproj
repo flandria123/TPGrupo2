@@ -10,7 +10,9 @@
     <PackageReference Include="AspNetCore.HealthChecks.UI" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="9.0.0" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="Dapper" Version="2.1.72" />
+    <PackageReference Include="KubernetesClient" Version="19.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.7" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.7" />
@@ -24,7 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="ExceptionHandlers\" />
     <Folder Include="Logs\" />
   </ItemGroup>
