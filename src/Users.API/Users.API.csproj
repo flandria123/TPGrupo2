@@ -26,7 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ExceptionHandlers\" />
     <Folder Include="Logs\" />
   </ItemGroup>
 

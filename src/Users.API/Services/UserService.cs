@@ -1,9 +1,10 @@
-﻿using Users.API.Exceptions;
-using Users.API.Models;
+﻿using Microsoft.Extensions.Logging;
 using Users.API.Data;
-using Microsoft.Extensions.Logging;
 using Users.API.DTOs;
+using Users.API.Exceptions;
+using Users.API.Models;
 using Users.API.Services;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
 
 
 
@@ -25,6 +26,21 @@ namespace Users.API.Services
         // ──────────────────────────────────────────────────────────────────────────
         public async Task<UserResponse> RegisterAsync(CreateItemRequest request)
         {
+            // Validación USR-002 para Registro [1, 4]
+            var errores = new List<string>();
+            if (string.IsNullOrWhiteSpace(request.Nombre)) errores.Add("El campo nombre es requerido");
+            if (string.IsNullOrWhiteSpace(request.Apellido)) errores.Add("El campo apellido es requerido");
+            if (string.IsNullOrWhiteSpace(request.Email) || !request.Email.Contains("@"))
+                errores.Add("El email es requerido y debe tener un formato válido");
+            if (string.IsNullOrWhiteSpace(request.Password)) errores.Add("La contraseña es requerida");
+
+            if (errores.Any())
+            {
+                // El catálogo permite listar errores separados por punto y coma [5]
+                throw new ValidationException("USR-002", string.Join("; ", errores));
+            }
+
+
             // 1. Validar si el email ya existe (Catálogo USR-001) [7, 8]
             var existingUser = await _userRepository.GetByEmailAsync(request.Email);
             if (existingUser != null)
@@ -56,6 +72,13 @@ namespace Users.API.Services
         // ──────────────────────────────────────────────────────────────────────────
         public async Task<UserResponse> LoginAsync(LoginRequestUser request)
         {
+           // NUEVO: Validación USR-002 para Login[1]
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            {
+                throw new ValidationException("USR-002", "Email y contraseña son campos obligatorios.");
+            }
+
+
             var user = await _userRepository.GetByEmailAsync(request.Email);
 
             // 1. Si el usuario no existe o ya está bloqueado [7, 13, 14]

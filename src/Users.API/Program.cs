@@ -1,7 +1,8 @@
+using HealthChecks.UI.Client;
 using Serilog;
 using Users.API.Data;
+using Users.API.ExceptionHandlers;
 using Users.API.Extensions;
-using HealthChecks.UI.Client;
 
 
 public partial class Program
@@ -9,31 +10,36 @@ public partial class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        
+
+        // 1. CONFIGURACIÓN DE SERVICIOS
         // Configurar Serilog
         builder.AddAppLogging();
        
         // Agregar servicios al contenedor
         builder.Services.AddAppServices();
-       
+        builder.Services.AddControllers();
+
+        //REGISTRO DE ERRORES
+        builder.Services.AddExceptionHandler<ValidationExceptionHandler>(); // Agregado para USR-002
+        builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
+        builder.Services.AddExceptionHandler<BusinessRuleExceptionHandler>();
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+        builder.Services.AddProblemDetails();
+
+
         var app = builder.Build();
-        
+
+        // 2. INICIALIZACIÓN (Después del Build)
         // Inicializar BD
-           using (var scope = app.Services.CreateScope())
-           scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-     
-
-
-        //Llamo a la BD
         using (var scope = app.Services.CreateScope())
-            scope.ServiceProvider
-                .GetRequiredService<DatabaseInitializer>()
-                .Initialize();
-        
-        //Log de ejemplo
-        var logger = app.Services.GetRequiredService<ILogger<Program>>();
-        logger.LogError("OK");
-
+        {
+            var services = scope.ServiceProvider;
+            // Inicializar BD
+            services.GetRequiredService<DatabaseInitializer>().Initialize();
+            // Log de confirmación
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogInformation("Base de datos inicializada y API lista.");
+        }
 
 
 
@@ -44,7 +50,13 @@ public partial class Program
             app.UseSwaggerUI(); // expone la UI en /swagger 
         }
 
-        // Mapeo de HealthChecks
+        //Registrar Handler de Excepciones //app.MapAppEndpoints(); NO VA
+        app.UseAppMiddleware();
+        app.UseExceptionHandler();
+        app.UseHttpsRedirection();
+        app.UseAuthorization();
+
+        // Mapeo de HealthChecks ------------------------------------
 
         // Health Check general (Database + API)
         app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
@@ -52,6 +64,8 @@ public partial class Program
             // Ahora debería reconocer UIResponseWriter directamente
             ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
         });
+
+        
 
         // Health Check de Liveness (solo que la API responda)
         app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
@@ -67,16 +81,9 @@ public partial class Program
             ResponseWriter = HealthChecks.UI.Client.UIResponseWriter.WriteHealthCheckUIResponse
         });
 
-
-        
-
-
-        app.UseAppMiddleware();
-        //app.MapAppEndpoints();
-        app.UseHttpsRedirection();
-        app.UseExceptionHandler();
-        app.UseAuthorization();
-        app.MapControllers();
+        app.MapControllers();  // Activa tus controladores de la Users.API
         app.Run();
+
+
     }
 }
