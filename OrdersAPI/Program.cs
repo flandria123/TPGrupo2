@@ -1,41 +1,38 @@
+using OrdersAPI.ExceptionHandlers;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// --- REQUERIMIENTO 5.1: Documentación de APIs con Swagger ---
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// --- REQUERIMIENTO 5.2: Registro de Handlers (según Apéndice B) ---
+builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
+builder.Services.AddExceptionHandler<BusinessRuleExceptionHandler>();
+builder.Services.AddProblemDetails(); // Formato estándar de errores
+
+// --- REQUERIMIENTO 5.4: Health Checks ---
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- REQUERIMIENTO 5.2: Activación del Manejo Global de Errores ---
+// Esto hace que los Handlers que creaste funcionen en toda la API
+app.UseExceptionHandler();
+
+// --- REQUERIMIENTO 5.1: Interfaz de Swagger ---
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// --- REQUERIMIENTO 5.4: Endpoint de Monitoreo ---
+app.MapHealthChecks("/health");
 
 app.Run();
-
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
