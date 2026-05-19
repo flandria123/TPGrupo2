@@ -1,5 +1,6 @@
 using HealthChecks.UI.Client;
 using Serilog;
+using System.Reflection;
 using Users.API.Data;
 using Users.API.ExceptionHandlers;
 using Users.API.Extensions;
@@ -13,9 +14,20 @@ public partial class Program
 
         // 1. CONFIGURACIÓN DE SERVICIOS
         // Configurar Serilog
-        builder.AddAppLogging();
        
-        // Agregar servicios al contenedor
+        builder.Services.AddSwaggerGen(c =>
+        {
+            // Localiza el archivo XML generado por el proyecto
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+            // Indica a Swagger que use dicho archivo para las descripciones
+            c.IncludeXmlComments(xmlPath);
+        });
+
+        builder.AddAppLogging();
+
+               // Agregar servicios al contenedor
         builder.Services.AddAppServices();
         builder.Services.AddControllers();
 
