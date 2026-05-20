@@ -52,6 +52,7 @@ namespace Users.API.Services
             // 2. Crear la entidad (El usuario nace Activo y con 0 intentos) [7, 9]
             var newUser = new User
             {
+                Id = Guid.NewGuid(),
                 Nombre = request.Nombre,
                 Apellido = request.Apellido,
                 Email = request.Email,

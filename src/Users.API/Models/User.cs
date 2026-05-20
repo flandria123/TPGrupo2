@@ -10,7 +10,7 @@ namespace Users.API.Models
         [Required] public string Apellido { get; init; } = string.Empty;
         [Required] [EmailAddress] public string Email { get; init; } = string.Empty;
         public string PasswordHash { get; init; } = string.Empty;
-        public DateTime FechaRegistro { get; init; }
+        public DateTime FechaRegistro { get; init; } = DateTime.UtcNow;
         public bool Activo { get; set; } = true;
         public int IntentosFallidos { get; set; } = 0;
 

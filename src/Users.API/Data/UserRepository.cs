@@ -1,6 +1,6 @@
 ﻿
 using Dapper;
-    using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using Users.API.Models;
 
 namespace Users.API.Data
@@ -33,11 +33,12 @@ namespace Users.API.Data
         public async Task<User> CreateAsync(User user)
         {
             using var conn = CreateConnection();
-            var id = await conn.ExecuteScalarAsync<int>("""
-            INSERT INTO usuarios (nombre, apellido, email, password_hash, activo, intentos_fallidos)
-            VALUES (@Nombre, @Apellido, @Email, @PasswordHash, @Activo, @IntentosFallidos);
-            SELECT last_insert_rowid();
-        """, user);
+
+                     
+            await conn.ExecuteAsync("""
+            INSERT INTO usuarios (id, nombre, apellido, email, password_hash, activo, intentos_fallidos)
+            VALUES (@Id, @Nombre, @Apellido, @Email, @PasswordHash, @Activo, @IntentosFallidos);
+            """, user);
 
             // Retornamos la entidad completa (usando su ID si es Guid o int)
             return user;
@@ -50,7 +51,7 @@ namespace Users.API.Data
             var rows = await conn.ExecuteAsync("""
             UPDATE usuarios
             SET activo = @Activo,
-                intentos_fallidos = @IntentosFallidos
+            intentos_fallidos = @IntentosFallidos
             WHERE id = @Id
         """, new { user.Activo, user.IntentosFallidos, user.Id });
 
