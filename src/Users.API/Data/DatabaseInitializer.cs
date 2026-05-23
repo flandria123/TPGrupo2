@@ -62,21 +62,28 @@ namespace Users.API.Data
                         Nombre = "Tomas", Apellido = "Ponti",
                         Email = "tomasP@gmail.com",
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
-                        Activo = 1, IntentosFallidos = 0
+                        Activo = true, IntentosFallidos = 0
                     },
                     new {
                         Id = Guid.NewGuid(),
                         Nombre = "Tomas", Apellido = "Ustimczuk",
                         Email = "tomasU@gmail.com",
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword("User123!"),
-                        Activo = 0, IntentosFallidos = 3
+                        Activo = false, IntentosFallidos = 3
                     },
                     new {
                         Id = Guid.NewGuid(),
                         Nombre = "Christian", Apellido = "Jackson",
                         Email = "christian@gmail.com",
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword("User123!"),
-                        Activo = 1, IntentosFallidos = 2
+                        Activo = true, IntentosFallidos = 2
+                    },
+                    new {
+                        Id = Guid.NewGuid(),
+                        Nombre = "Cosme", Apellido = "Fulanito",
+                        Email = "cosmefulanito@gmail.com",
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("User123!"),
+                        Activo = false, IntentosFallidos = 1
                     },
                 });
             }

@@ -8,6 +8,7 @@ namespace Users.API.Controllers
     [ApiController]
     [Route("api/users")]
     [Tags("Users")]
+    [Produces("application/json")]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -40,6 +41,19 @@ namespace Users.API.Controllers
         ///        "errorCode": "USR-001",
         ///        "errorMessage": "El email 'maria@email.com' ya está registrado."
         ///     }
+        /// Ejemplo de respuesta de error (Datos inválidos):
+        /// 
+        ///     {
+        ///        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+        ///        "title": "Bad Request",
+        ///        "status": 400,
+        ///        "detail": "La solicitud contiene campos faltantes o con formato incorrecto.",
+        ///        "instance": "/api/users/register",
+        ///        "errorCode": "USR-002",
+        ///        "errorMessage": "Los datos del usuario son inválidos."
+        ///     }    
+        /// 
+        /// 
         /// </remarks>
         /// <param name="request">Datos del usuario (Nombre, Apellido, Email, Password).</param>
         /// <response code="201">Usuario creado con éxito. El campo PasswordHash no se incluye en la respuesta [2].</response>
@@ -78,6 +92,31 @@ namespace Users.API.Controllers
         ///        "errorCode": "USR-004",
         ///        "errorMessage": "Su cuenta fue bloqueada por superar el máximo de intentos fallidos."
         ///     }
+        ///     
+        ///  Ejemplo de respuesta de error (Credenciales incorrectas):
+        /// 
+        ///     {
+        ///        "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
+        ///        "title": "Unauthorized",
+        ///        "status": 401,
+        ///        "detail": "Las credenciales no son válidas.",
+        ///        "instance": "/api/users/login",
+        ///        "errorCode": "USR-003",
+        ///        "errorMessage": "Credenciales incorrectas."
+        ///     }
+        ///     
+        ///  Ejemplo de respuesta de error (Bloqueo por seguridad):
+        /// 
+        ///     {
+        ///        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+        ///        "title": "Forbidden",
+        ///        "status": 403,
+        ///        "detail": "El acceso está prohibido.",
+        ///        "instance": "/api/users/login",
+        ///        "errorCode": "USR-005",
+        ///        "errorMessage": "Su cuenta fue suspendida por razones de seguridad. Contacte a soporte."
+        ///     }
+        /// 
         /// </remarks>
         /// <response code="200">Login exitoso.</response>
         /// <response code="400">Los datos de la petición son inválidos (USR-002) [2].</response>

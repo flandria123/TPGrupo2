@@ -5,10 +5,14 @@ namespace Users.API.DTOs
     
     
         public record CreateItemRequest(
+            /// <example>María</example>
             [Required] string Nombre,
+            /// <example>González</example>
             [Required] string Apellido,
-           [Required] string Email,
-           [Required] string Password
+            /// <example>maria@email.com</example>
+            [Required] string Email,
+            /// <example>MiPassword123!</example>
+            [Required] string Password
         );
 
 

@@ -1,3 +1,4 @@
+using Dapper;
 using HealthChecks.UI.Client;
 using Serilog;
 using System.Reflection;
@@ -38,6 +39,8 @@ public partial class Program
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
 
+        // Para el GuidTypeHandler de Dapper
+        SqlMapper.AddTypeHandler(new GuidTypeHandler());
 
         var app = builder.Build();
 

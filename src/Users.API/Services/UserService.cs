@@ -123,16 +123,7 @@ namespace Users.API.Services
             }
         }
 
-        private UserResponse MapToResponse(User entity) => new(
-            entity.Id,
-            entity.Nombre,
-            entity.Apellido,
-            entity.Email,
-            entity.FechaRegistro,
-            entity.Activo
-        );
-
-
+        private UserResponse MapToResponse(User entity) => new(entity.Id, entity.Nombre, entity.Apellido, entity.Email, entity.FechaRegistro, entity.Activo);
 
     }
 }
