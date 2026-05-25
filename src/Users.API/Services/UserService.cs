@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Serilog.Core;
 using Users.API.Data;
 using Users.API.DTOs;
 using Users.API.Exceptions;
@@ -36,8 +37,12 @@ namespace Users.API.Services
 
             if (errores.Any())
             {
-                // El catálogo permite listar errores separados por punto y coma [5]
-                throw new ValidationException("USR-002", string.Join("; ", errores));
+                
+                    var msg = string.Join("; ", errores);
+                    // Logueamos la advertencia de validación para auditoría [2]
+                    _logger.LogWarning("Error de validación en registro: {Errores}. [USR-002]", msg);
+                    throw new ValidationException("USR-002", msg);
+                
             }
 
 
@@ -64,6 +69,11 @@ namespace Users.API.Services
 
             var userCreated = await _userRepository.CreateAsync(newUser);
 
+            
+            _logger.LogInformation(
+            "Usuario registrado correctamente: {Email}",
+            newUser.Email);
+            
             // 3. Mapear a Respuesta (NUNCA devolver el PasswordHash) [7, 12]
             return MapToResponse(userCreated);
         }
@@ -73,9 +83,10 @@ namespace Users.API.Services
         // ──────────────────────────────────────────────────────────────────────────
         public async Task<UserResponse> LoginAsync(LoginRequestUser request)
         {
-           // NUEVO: Validación USR-002 para Login[1]
+            // Validación USR-002 para Login[1]
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             {
+                _logger.LogWarning("Intento de login con credenciales vacías. [USR-002]");
                 throw new ValidationException("USR-002", "Email y contraseña son campos obligatorios.");
             }
 
@@ -83,17 +94,28 @@ namespace Users.API.Services
             var user = await _userRepository.GetByEmailAsync(request.Email);
 
             // 1. Si el usuario no existe o ya está bloqueado [7, 13, 14]
+
             if (user == null)
+            {
+                _logger.LogWarning("Fallo de login: Email inexistente {Email}. [USR-003]", request.Email);
                 throw new BusinessRuleException("USR-003", "Credenciales incorrectas.");
+            }
 
             if (!user.Activo)
             {
                 // Diferenciar por qué está bloqueado según el catálogo [13-15]
                 if (user.IntentosFallidos >= 3)
+                {
+                    _logger.LogWarning(
+                   "Intento de acceso a cuenta bloqueada: {Email}",
+                   user.Email);
                     throw new BusinessRuleException("USR-004", "Su cuenta fue bloqueada por superar el máximo de intentos fallidos.");
-
+                                        
+                }
+                _logger.LogWarning("Intento de acceso a cuenta suspendida manualmente: {Email}. [USR-005]", user.Email);
                 throw new BusinessRuleException("USR-005", "Su cuenta fue suspendida por razones de seguridad.");
             }
+
 
             // 2. Validar Contraseña
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
@@ -102,9 +124,17 @@ namespace Users.API.Services
             {
                 // LOGIN EXITOSO: Resetear intentos [9, 16]
                 user.IntentosFallidos = 0;
+
                 await _userRepository.UpdateAsync(user);
+
+                _logger.LogInformation(
+                 "Login exitoso para usuario: {Email}",
+                user.Email);
+                
                 return MapToResponse(user);
+
             }
+
             else
             {
                 // LOGIN FALLIDO: Incrementar contador y bloquear si llega a 3 [7, 12, 17]
@@ -113,8 +143,14 @@ namespace Users.API.Services
                 if (user.IntentosFallidos >= 3)
                 {
                     user.Activo = false;
-                    _logger.LogCritical("Usuario {Email} BLOQUEADO por 3 intentos fallidos.", user.Email);
+                    _logger.LogWarning("Usuario {Email} BLOQUEADO por 3 intentos fallidos.", user.Email);
                 }
+
+                else
+                {
+                    _logger.LogWarning("Contraseña incorrecta para {Email}. Intento #{Intentos}. [USR-003]", user.Email, user.IntentosFallidos);
+                }
+
 
                 await _userRepository.UpdateAsync(user);
 
