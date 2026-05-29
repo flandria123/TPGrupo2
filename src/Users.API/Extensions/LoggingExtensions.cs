@@ -1,9 +1,10 @@
 ﻿namespace Users.API.Extensions;
 
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 using Serilog.Filters;
-using Serilog.Formatting.Json; 
+using Serilog.Formatting.Json;
 
 public static class LoggingExtensions
 {
@@ -24,19 +25,33 @@ public static class LoggingExtensions
             .WriteTo.Logger(lc => lc
                 .Filter.ByIncludingOnly(le =>
                 {
-                    // Solo logs del Middleware de Serilog para evitar duplicados [4]
-                    var isSerilogMiddleware = Matching.FromSource("Serilog.AspNetCore.RequestLoggingMiddleware")(le);
-                    if (!isSerilogMiddleware) return false;
+                    var sourceContext = le.Properties.ContainsKey("SourceContext")
+        ? le.Properties["SourceContext"].ToString()
+        : string.Empty;
 
-                    // Exclusión de rutas de monitoreo y docs [3, 4]
+                    // Permitir logs HTTP automáticos de Serilog
+                    var isRequestLogging =
+                        sourceContext.Contains("Serilog.AspNetCore.RequestLoggingMiddleware");
+
+                    // Permitir logs de auditoría custom
+                    var isAuditMiddleware =
+                        sourceContext.Contains("AuditMiddleware");
+
+                    if (!isRequestLogging && !isAuditMiddleware)
+                        return false;
+
+                    // Excluir endpoints irrelevantes
                     if (le.Properties.TryGetValue("RequestPath", out var pathValue) &&
-                        pathValue is ScalarValue scalar && scalar.Value is string path)
+                        pathValue is ScalarValue scalar &&
+                        scalar.Value is string path)
                     {
                         return !path.Contains("/health", StringComparison.OrdinalIgnoreCase) &&
                                !path.Contains("/swagger", StringComparison.OrdinalIgnoreCase);
                     }
+
                     return true;
                 })
+
                 .WriteTo.File(
                     path: "logs/Users.API-audit.log",
                     formatter: new JsonFormatter(), // FORMATO OBLIGATORIO PARA EL TP [2]
