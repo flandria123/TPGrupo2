@@ -1,40 +1,46 @@
-﻿    using Microsoft.Extensions.DependencyInjection;
-    using Users.API.Data;
-    using Users.API.HealthCheck;
-    using Users.API.Services;
+﻿using Serilog;
+using Serilog.Events;
+using Serilog.Filters;
+using Serilog.Formatting.Json; 
 
-namespace Users.API.Extensions
+public static class LoggingExtensions
 {
-        public static class ServicesExtensions
-        {
-            public static void AddAppServices(this IServiceCollection services)
-            {
-                // 1. Registro del Inicializador que ya creaste
-                services.AddSingleton<DatabaseInitializer>();
+    public static void AddAppLogging(this WebApplicationBuilder builder)
+    {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", LogEventLevel.Information)
+            .Enrich.FromLogContext()
 
-            // 2. Registro de tu Repositorio de Usuarios (o Service)
+            // CONSOLA: Formato legible, solo errores para mantener la terminal limpia [3]
+            .WriteTo.Logger(lc => lc
+                .Filter.ByIncludingOnly(le => le.Level >= LogEventLevel.Error)
+                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"))
 
-            services.AddScoped<UserRepository>();
-
-            // 3. Capa de Negocio (El contrato y su implementación) [3, 10]
-            services.AddScoped<IUserService, UserService>();
-
-            // 4. Documentación (Swagger)
-            services.AddEndpointsApiExplorer();
-                services.AddSwaggerGen();
-
-                // 5. Configuración de Health Checks (Lo que viste en ambos documentos)
-                services.AddHealthChecks()
-                    .AddCheck<SqliteHealthCheck>("sqlite-db", tags: ["database"])
-                    .AddCheck<ApiStatusCheck>("api-status", tags: ["api"]);
-
-                // 6. El Dashboard Visual (Health Checks UI)
-                services.AddHealthChecksUI(setup =>
+            // ARCHIVO: Formato JSON estructurado para auditoría [2, 3]
+            .WriteTo.Logger(lc => lc
+                .Filter.ByIncludingOnly(le =>
                 {
-                    setup.SetEvaluationTimeInSeconds(600); // Evalúa cada 10 minutos [3]
-                    setup.AddHealthCheckEndpoint("User-API", "/health");
-                }).AddInMemoryStorage();
-            }
-        }
-    }
+                    // Solo logs del Middleware de Serilog para evitar duplicados [4]
+                    var isSerilogMiddleware = Matching.FromSource("Serilog.AspNetCore.RequestLoggingMiddleware")(le);
+                    if (!isSerilogMiddleware) return false;
 
+                    // Exclusión de rutas de monitoreo y docs [3, 4]
+                    if (le.Properties.TryGetValue("RequestPath", out var pathValue) &&
+                        pathValue is ScalarValue scalar && scalar.Value is string path)
+                    {
+                        return !path.Contains("/health", StringComparison.OrdinalIgnoreCase) &&
+                               !path.Contains("/swagger", StringComparison.OrdinalIgnoreCase);
+                    }
+                    return true;
+                })
+                .WriteTo.File(
+                    path: "logs/Users.API-audit.log",
+                    formatter: new JsonFormatter(), // FORMATO OBLIGATORIO  [2]
+                    rollingInterval: RollingInterval.Day))
+            .CreateLogger();
+
+        builder.Host.UseSerilog();
+    }
+}
