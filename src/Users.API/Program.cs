@@ -1,5 +1,6 @@
 using Dapper;
 using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using System.Reflection;
 using Users.API.Data;
@@ -25,6 +26,12 @@ public partial class Program
             // Indica a Swagger que use dicho archivo para las descripciones
             c.IncludeXmlComments(xmlPath);
         });
+
+        builder.Services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.SuppressModelStateInvalidFilter = true;
+        });
+
 
         builder.AddAppLogging();
 

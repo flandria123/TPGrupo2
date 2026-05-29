@@ -5,14 +5,23 @@ namespace Users.API.DTOs
     
     
         public record CreateItemRequest(
+            
             /// <example>María</example>
-            [Required] string Nombre,
+            [Required(ErrorMessage = "El nombre es obligatorio.")]
+            string Nombre,
+            
             /// <example>González</example>
-            [Required] string Apellido,
+            [Required(ErrorMessage = "El apellido es obligatorio.")]
+            string Apellido,
+            
             /// <example>maria@email.com</example>
-            [Required] string Email,
+            [Required(ErrorMessage = "El email es obligatorio.")]
+            [EmailAddress(ErrorMessage = "El email no tiene un formato válido.")]
+            string Email,
+
             /// <example>MiPassword123!</example>
-            [Required] string Password
+            [Required(ErrorMessage = "La contraseña es obligatoria.")]
+             string Password
         );
 
 

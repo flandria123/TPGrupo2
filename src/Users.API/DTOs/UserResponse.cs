@@ -12,7 +12,7 @@
             /// <example>maria@email.com</example>
             string Email,
 
-            /// <example>2024-03-10T09:00:00Z </example>
+            /// <example>2024-03-10T09:00:00Z</example>
             DateTime FechaRegistro,
             
             /// <example>true</example>

@@ -3,6 +3,7 @@ using Users.API.Data;
 using Users.API.HealthCheck;
 using Users.API.Services;
 
+
 namespace Users.API.Extensions
 {
     public static class ServicesExtensions
