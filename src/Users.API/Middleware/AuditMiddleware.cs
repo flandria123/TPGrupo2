@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using System.Text;
 using System.Text.Json;
 
 namespace Users.API.Middleware
@@ -48,10 +50,11 @@ namespace Users.API.Middleware
             context.Response.Body = originalResponseBody;
 
             // ── Escribir entrada de auditoría ──────────────────────────────────
-            
 
+            var correlationId = context.Items["CorrelationId"]?.ToString();
             _logger.LogInformation(
-                "AUDIT {@Method} {@Path} {@StatusCode} {@RequestBody} {@ResponseBody}",
+                "AUDIT {@CorrelationId} {@Method} {@Path} {@StatusCode} {@RequestBody} {@ResponseBody}",
+                correlationId,
                 context.Request.Method,
                 context.Request.Path.Value,
                 context.Response.StatusCode,

@@ -9,7 +9,7 @@
             string Nombre,
             /// <example>González</example>
             string Apellido,
-            //// <example>maria@email.com</example>
+            /// <example>maria@email.com</example>
             string Email,
 
             /// <example>2024-03-10T09:00:00Z </example>
