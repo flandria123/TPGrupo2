@@ -71,14 +71,17 @@ namespace Users.API.Middleware
         // Deserializar para que Serilog lo guarde como objeto JSON (no como string)
         private static object? TryParseAndSanitizeJson(string raw, PathString path)
         {
-           if (string.IsNullOrWhiteSpace(raw)) return null;
+           if (string.IsNullOrWhiteSpace(raw)) 
+              return null;
     
            try 
            { 
-               var jsonDict = JsonSerializer.Deserialize<Dictionary<string, object>>(raw);
-        
-               // Estándar de seguridad: Si es un endpoint de usuarios, ofuscar contraseñas
-                  if (path.Value?.Contains("/users") == true && jsonDict != null)
+               var jsonDict = JsonSerializer.Deserialize<Dictionary<string, string>>(raw);
+                if (jsonDict == null)
+                    return null;
+
+                // Estándar de seguridad: Si es un endpoint de usuarios, ofuscar contraseñas
+                if (path.Value?.Contains("/users") == true && jsonDict != null)
                   {
                        if (jsonDict.ContainsKey("password")) jsonDict["password"] = "********";
                       if (jsonDict.ContainsKey("Password")) jsonDict["Password"] = "********";
@@ -87,7 +90,14 @@ namespace Users.API.Middleware
                return jsonDict; 
            }
                
-            catch { return raw; }
+            catch 
+            {
+                return raw;
+            
+            }
+
+
         }
     }
 }
+

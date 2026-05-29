@@ -26,11 +26,22 @@ namespace Users.API.Extensions
             app.UseSerilogRequestLogging(options =>
             {
                 options.GetLevel = (httpContext, _, ex) =>
-                    ex != null
-                        ? LogEventLevel.Error
-                        : httpContext.Request.Path.StartsWithSegments("/health")
-                            ? LogEventLevel.Verbose
-                            : LogEventLevel.Information;
+                {
+                    // Error inesperado (5xx o excepción no controlada)
+                    if (ex != null || httpContext.Response.StatusCode >= 500)
+                        return LogEventLevel.Error;
+
+                    // Errores de negocio / validación
+                    if (httpContext.Response.StatusCode >= 400)
+                        return LogEventLevel.Warning;
+
+                    // Health checks silenciosos
+                    if (httpContext.Request.Path.StartsWithSegments("/health"))
+                        return LogEventLevel.Verbose;
+
+                    // Requests normales exitosas
+                    return LogEventLevel.Information;
+                };
             });
         }
 
