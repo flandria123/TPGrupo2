@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using OrdersAPI.Data;
 using OrdersAPI.DTOs;
 using OrdersAPI.Exceptions;
 using OrdersAPI.Models;
@@ -10,17 +11,20 @@ public class OrderService : IOrderService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<OrderService> _logger;
+    private readonly OrderRepository _repository; // Llamamos a la clase concreta directamente
 
-    public OrderService(IHttpClientFactory httpClientFactory, ILogger<OrderService> logger)
+    // Inyectamos el repositorio en el constructor
+    public OrderService(IHttpClientFactory httpClientFactory, ILogger<OrderService> logger, OrderRepository repository)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
+        _repository = repository;
     }
 
     public async Task<IEnumerable<OrderResponse>> GetOrdersAsync(Guid? usuarioId)
     {
-        // Simulación: Acá iría var orders = await _repository.GetAllAsync(usuarioId);
-        var orders = new List<Order>();
+        // Consumo directo desde la base de datos SQLite
+        var orders = await _repository.GetAllAsync(usuarioId);
 
         // Transformamos la lista de entidades en una lista de DTOs
         return orders.Select(MapToResponse).ToList();
@@ -97,10 +101,11 @@ public class OrderService : IOrderService
             Total = totalCalculado,
             Estado = "Pendiente",
             FechaCreacion = DateTime.UtcNow,
-            Items = orderItems // Asignamos los items al modelo principal
+            Items = orderItems
         };
 
-        // await _repository.AddAsync(nuevaOrden);
+        // Guardado real en la base de datos habilitado
+        await _repository.AddAsync(nuevaOrden);
 
         _logger.LogInformation("Orden creada exitosamente. ID: {OrderId}, Total: ${Total}", nuevaOrden.Id, totalCalculado);
 
@@ -109,7 +114,6 @@ public class OrderService : IOrderService
 
     public async Task UpdateStatusAsync(Guid id, string nuevoEstado)
     {
-        // Usamos el helper interno que nos devuelve la ENTIDAD (Order) para poder mutarla
         var order = await GetOrderEntityByIdAsync(id);
 
         // --- VALIDACIÓN DE REGLA DE NEGOCIO (ORD-006) - HABILITADA ---
@@ -118,20 +122,20 @@ public class OrderService : IOrderService
             throw new BusinessRuleException("ORD-006", "No se puede modificar el estado de una orden que ya se encuentra en estado Cancelada o Completada.");
         }
 
-        // Asignamos el estado actualizado a nuestra entidad
         order.Estado = nuevoEstado;
 
-        // await _repository.UpdateAsync(order);
+        // Actualización real en la base de datos habilitada
+        await _repository.UpdateAsync(order);
     }
 
     // ========================================================================
     // MÉTODOS PRIVADOS DE APOYO (Helpers)
     // ========================================================================
 
-    // Devuelve la Entidad pura para uso interno (Ej: para actualizar estado)
     private async Task<Order> GetOrderEntityByIdAsync(Guid id)
     {
-        Order? order = null; // Acá iría: await _repository.GetByIdAsync(id);
+        // Búsqueda real en base de datos habilitada
+        Order? order = await _repository.GetByIdAsync(id);
 
         if (order == null)
         {
@@ -141,7 +145,6 @@ public class OrderService : IOrderService
         return order;
     }
 
-    // Centraliza la conversión de la Base de Datos a la Respuesta de la API
     private OrderResponse MapToResponse(Order order)
     {
         return new OrderResponse
@@ -151,7 +154,6 @@ public class OrderService : IOrderService
             Total = order.Total,
             Estado = order.Estado,
             FechaCreacion = order.FechaCreacion,
-            // Asumiendo que tu modelo Order tiene una colección 'Items'
             Items = order.Items?.Select(i => new OrderItemResponse
             {
                 ProductoId = i.ProductoId,
