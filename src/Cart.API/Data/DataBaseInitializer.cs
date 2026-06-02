@@ -15,7 +15,7 @@ public class DatabaseInitializer(IConfiguration config)
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
-        // Creamos las tablas siguiendo el modelo del Apéndice A
+        // Creción de las tablas siguiendo el modelo 
         connection.Execute("""
             -- Tabla de cabecera del carrito
             CREATE TABLE IF NOT EXISTS carts (
@@ -38,59 +38,37 @@ public class DatabaseInitializer(IConfiguration config)
 
     }
 
-    
+
     private void SeedData(SqliteConnection connection)
     {
-        var count = connection.ExecuteScalar<int>(
-            "SELECT COUNT(*) FROM carts");
+        // 1. Verificamos si ya hay datos para no duplicar
+        var count = connection.ExecuteScalar<int>("SELECT COUNT(*) FROM carts");
+        if (count > 0) return;
 
-        if (count > 0)
-            return;
+        // 2. Definimos IDs fijos ( mismos que en Products y Users )
+        var usuarioId = "21b75cee-f8f6-4261-a370-21b16c40967e";
+        var productoId1 = "11111111-1111-1111-1111-111111111111"; // Ej: Notebook
+        var productoId2 = "22222222-2222-2222-2222-222222222222"; // Ej: Auriculares
 
-        var usuario1 = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        // 3. Insertamos la cabecera del carrito
+        connection.Execute("""
+        INSERT INTO carts (usuario_id, fecha_actualizacion)
+        VALUES (@UsuarioId, datetime('now'))
+    """, new { UsuarioId = usuarioId });
 
-        var producto1 = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        // 4. Insertamos múltiples ítems para probar la lista
+        connection.Execute("""
+        INSERT INTO cart_items (usuario_id, producto_id, cantidad)
+        VALUES (@UsuarioId, @ProductoId, @Cantidad)
+    """, new[] {
+        new { UsuarioId = usuarioId, ProductoId = productoId1, Cantidad = 1 },
+        new { UsuarioId = usuarioId, ProductoId = productoId2, Cantidad = 3 }
+    });
 
-        // Crear carrito
-        connection.Execute(
-            """
-        INSERT INTO carts (
-            usuario_id,
-            fecha_actualizacion
-        )
-        VALUES (
-            @UsuarioId,
-            datetime('now')
-        )
-        """,
-            new
-            {
-                UsuarioId = usuario1.ToString()
-            });
 
-        // Crear item
-        connection.Execute(
-            """
-        INSERT INTO cart_items (
-            usuario_id,
-            producto_id,
-            cantidad
-        )
-        VALUES (
-            @UsuarioId,
-            @ProductoId,
-            @Cantidad
-        )
-        """,
-            new
-            {
-                UsuarioId = usuario1.ToString(),
-                ProductoId = producto1.ToString(),
-                Cantidad = 2
-            });
     }
-
-
-
-
 }
+
+
+
+

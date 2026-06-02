@@ -1,6 +1,8 @@
+using Cart.API.Data;
 using CartAPI.Data;
 using CartAPI.Services;
 using CartPI.Data;
+using Dapper;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,7 +25,7 @@ builder.Services.AddHttpClient(
 
 builder.Services.AddSingleton<DatabaseInitializer>();
 
-
+SqlMapper.AddTypeHandler(new GuidTypeHandler());
 
 var app = builder.Build(); // Hay que borrarlo antes del merge porque despues lo vamos a integrar todo
 
