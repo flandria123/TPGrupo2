@@ -30,12 +30,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-    <Folder Include="Data\" />
     <Folder Include="DTOs\" />
     <Folder Include="Models\" />
     <Folder Include="Logs\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

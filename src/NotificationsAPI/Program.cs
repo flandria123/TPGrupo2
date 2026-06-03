@@ -1,116 +1,82 @@
-using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using NotificationsAPI.ExceptionHandlers;
+using HealthChecks.UI.Client;
+using NotificationsAPI.Data;
 using NotificationsAPI.Extensions;
-using NotificationsAPI.HealthChecks;
+using Dapper;
 
-public class Program
+namespace NotificationsAPI;
+
+public partial class Program
 {
     public static void Main(string[] args)
     {
-
         var builder = WebApplication.CreateBuilder(args);
 
-        // ─────────────────────────────────────────────
-        // LOGGING (SERILOG)
-        // ─────────────────────────────────────────────
+        // 1. CONFIGURACIÓN DE LOGGING (Serilog)
+        // Mantiene la terminal limpia y guarda auditoría en archivo 
         builder.AddAppLogging();
 
-        // ─────────────────────────────────────────────
-        // SERVICES
-        // ─────────────────────────────────────────────
-        builder.Services.AddControllers();
+        // 2. REGISTRO DE SERVICIOS (La magia de tu ServicesExtensions)
+        // Aquí adentro se cargan Controllers, Swagger, DI, HttpClient, Handlers y HealthChecks 
+        builder.Services.AddAppServices();
 
-        builder.Services.AddEndpointsApiExplorer();
-
-        builder.Services.AddSwaggerGen();
-
-        // ─────────────────────────────────────────────
-        // HEALTH CHECKS
-        // ─────────────────────────────────────────────
-        builder.Services.AddHealthChecks()
-
-            // Estado general de la API
-            .AddCheck<ApiStatusCheck>(
-                "api-status",
-                tags: new[] { "api" })
-
-            // Estado de SQLite
-            .AddCheck<SqliteHealthCheck>(
-                "sqlite",
-                tags: new[] { "database" });
-
-        // ─────────────────────────────────────────────
-        // EXCEPTION HANDLERS
-        // ─────────────────────────────────────────────
-        builder.Services.AddExceptionHandler<BusinessRuleExceptionHandler>();
-
-        builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
-
-        builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
-
-        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-
-        builder.Services.AddProblemDetails();
+        // Configuración indispensable para que Dapper entienda los campos Guid en SQLite
+        SqlMapper.AddTypeHandler(new GuidTypeHandler());
 
         var app = builder.Build();
 
-        // ─────────────────────────────────────────────
-        // SWAGGER
-        // ─────────────────────────────────────────────
-        if (app.Environment.IsDevelopment())
+        // 3. INICIALIZACIÓN (Después del Build)
+        using (var scope = app.Services.CreateScope())
         {
-            app.UseSwagger();
+            var services = scope.ServiceProvider;
 
-            app.UseSwaggerUI();
+            // Crea la tabla de notificaciones si no existe (Plug & Play) 
+            services.GetRequiredService<DatabaseInitializer>().Initialize();
+
+            // Log de confirmación de arranque 
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogInformation("Base de datos de Notificaciones inicializada y API lista.");
         }
 
-        // ─────────────────────────────────────────────
-        // EXCEPTION PIPELINE
-        // ─────────────────────────────────────────────
+        // 4. PIPELINE HTTP (Middlewares y Endpoints)
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();   // expone el JSON en /swagger/v1/swagger.json 
+            app.UseSwaggerUI(); // expone la UI en /swagger 
+        }
+
+        app.UseAppMiddleware(); // Correlation ID y Request Logging de Serilog 
+
+        // Atrapa excepciones de dominio y emite códigos NTF-XXX 
         app.UseExceptionHandler();
 
-        // ─────────────────────────────────────────────
-        // CUSTOM MIDDLEWARE
-        // ─────────────────────────────────────────────
-        app.UseAppMiddleware();
-
         app.UseHttpsRedirection();
-
         app.UseAuthorization();
 
-        // ─────────────────────────────────────────────
-        // CONTROLLERS
-        // ─────────────────────────────────────────────
-        app.MapControllers();
+        // ── Mapeo de HealthChecks a la vista (Estilo Profesor)
 
-        // ─────────────────────────────────────────────
-        // HEALTH CHECKS
-        // ─────────────────────────────────────────────
-
-        // Health general (API + DB)
+        // Health Check general (Database + API)
         app.MapHealthChecks("/health", new HealthCheckOptions
         {
             ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
         });
 
-        // Liveness → solo verificar que la API esté viva
+        // Liveness (solo que la API responda)
         app.MapHealthChecks("/health/live", new HealthCheckOptions
         {
-            Predicate = check => check.Tags.Contains("api"),
+            Predicate = r => r.Tags.Contains("api"),
             ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
         });
 
-        // Readiness → verificar dependencias críticas
+        // Readiness (que la base de datos de SQLite esté lista)
         app.MapHealthChecks("/health/ready", new HealthCheckOptions
         {
-            Predicate = check => check.Tags.Contains("database"),
+            Predicate = r => r.Tags.Contains("database"),
             ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
         });
 
+        app.MapControllers();  // Activa tus controladores REST de Notifications.API
+
         app.Run();
-
-
-
     }
 }

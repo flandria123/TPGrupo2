@@ -20,8 +20,6 @@
         // Ej: "Pendiente", "Enviado", "Fallido"
         public string Estado { get; set; } = string.Empty;
 
-        public DateTime FechaCreacion { get; set; }
-
         public DateTime? FechaEnvio { get; set; }
     }
 }

@@ -14,18 +14,12 @@
         /// <example>Email</example>
         string Tipo,
 
-        /// <example>Confirmación de compra</example>
-        string Asunto,
-
         /// <example>Tu orden ha sido procesada con éxito.</example>
         string Mensaje,
 
         /// <example>Enviado</example>
         string Estado,
-
-        /// <example>2026-06-03T14:30:00Z</example>
-        DateTime FechaCreacion,
-
+                
         /// <example>2026-06-03T14:30:05Z</example>
         DateTime? FechaEnvio
     );
