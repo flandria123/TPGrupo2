@@ -33,8 +33,6 @@
     <Folder Include="Controllers\" />
     <Folder Include="Data\" />
     <Folder Include="DTOs\" />
-    <Folder Include="Middleware\" />
-    <Folder Include="Extensions\" />
     <Folder Include="HealthChecks\" />
     <Folder Include="Models\" />
     <Folder Include="Logs\" />
