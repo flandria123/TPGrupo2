@@ -58,28 +58,28 @@ namespace Users.API.Data
                 VALUES (@Id, @Nombre, @Apellido, @Email, @PasswordHash, @Activo, @IntentosFallidos)
             """,    new[] {
                     new {
-                        Id = Guid.NewGuid(),
+                        Id = Guid.Parse("21b75cee-f8f6-4261-a370-21b16c40967e"),
                         Nombre = "Tomas", Apellido = "Ponti",
                         Email = "tomasP@gmail.com",
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
                         Activo = true, IntentosFallidos = 0
                     },
                     new {
-                        Id = Guid.NewGuid(),
+                        Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
                         Nombre = "Tomas", Apellido = "Ustimczuk",
                         Email = "tomasU@gmail.com",
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword("User123!"),
                         Activo = false, IntentosFallidos = 3
                     },
                     new {
-                        Id = Guid.NewGuid(),
+                        Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
                         Nombre = "Christian", Apellido = "Jackson",
                         Email = "christian@gmail.com",
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword("User123!"),
                         Activo = true, IntentosFallidos = 2
                     },
                     new {
-                        Id = Guid.NewGuid(),
+                        Id = Guid.Parse("44444444-4444-4444-4444-444444444444"),
                         Nombre = "Cosme", Apellido = "Fulanito",
                         Email = "cosmefulanito@gmail.com",
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword("User123!"),
