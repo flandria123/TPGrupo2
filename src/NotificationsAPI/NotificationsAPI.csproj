@@ -31,7 +31,6 @@
 
   <ItemGroup>
     <Folder Include="Controllers\" />
-    <Folder Include="Data\" />
     <Folder Include="HealthChecks\" />
     <Folder Include="Logs\" />
     <Folder Include="Services\" />
