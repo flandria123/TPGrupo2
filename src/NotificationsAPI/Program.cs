@@ -1,13 +1,16 @@
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using NotificationsAPI.ExceptionHandlers;
 using NotificationsAPI.Extensions;
+using NotificationsAPI.HealthChecks;
 
-public partial class Program
+public class Program
 {
     public static void Main(string[] args)
     {
 
         var builder = WebApplication.CreateBuilder(args);
-                                         
+
         // ─────────────────────────────────────────────
         // LOGGING (SERILOG)
         // ─────────────────────────────────────────────
@@ -19,14 +22,33 @@ public partial class Program
         builder.Services.AddControllers();
 
         builder.Services.AddEndpointsApiExplorer();
+
         builder.Services.AddSwaggerGen();
+
+        // ─────────────────────────────────────────────
+        // HEALTH CHECKS
+        // ─────────────────────────────────────────────
+        builder.Services.AddHealthChecks()
+
+            // Estado general de la API
+            .AddCheck<ApiStatusCheck>(
+                "api-status",
+                tags: new[] { "api" })
+
+            // Estado de SQLite
+            .AddCheck<SqliteHealthCheck>(
+                "sqlite",
+                tags: new[] { "database" });
 
         // ─────────────────────────────────────────────
         // EXCEPTION HANDLERS
         // ─────────────────────────────────────────────
         builder.Services.AddExceptionHandler<BusinessRuleExceptionHandler>();
+
         builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+
         builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
+
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
         builder.Services.AddProblemDetails();
@@ -39,6 +61,7 @@ public partial class Program
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
+
             app.UseSwaggerUI();
         }
 
@@ -56,11 +79,38 @@ public partial class Program
 
         app.UseAuthorization();
 
+        // ─────────────────────────────────────────────
+        // CONTROLLERS
+        // ─────────────────────────────────────────────
         app.MapControllers();
 
+        // ─────────────────────────────────────────────
+        // HEALTH CHECKS
+        // ─────────────────────────────────────────────
+
+        // Health general (API + DB)
+        app.MapHealthChecks("/health", new HealthCheckOptions
+        {
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+
+        // Liveness → solo verificar que la API esté viva
+        app.MapHealthChecks("/health/live", new HealthCheckOptions
+        {
+            Predicate = check => check.Tags.Contains("api"),
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+
+        // Readiness → verificar dependencias críticas
+        app.MapHealthChecks("/health/ready", new HealthCheckOptions
+        {
+            Predicate = check => check.Tags.Contains("database"),
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+
         app.Run();
+
+
+
     }
-
-    
-
 }
