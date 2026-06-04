@@ -1,36 +1,40 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
-using ProductsAPI.Exceptions;
+﻿using ProductsAPI.Exceptions;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc; // Para StatusCodes
 
-namespace ProductsAPI.ExceptionHandlers;
-
-
-public class BusinessRuleExceptionHandler : IExceptionHandler
+namespace ProductsAPI.ExceptionHandlers
 {
-    public async ValueTask<bool> TryHandleAsync(
-        HttpContext context,
-        Exception exception,
-        CancellationToken cancellationToken)
+    public class BusinessRuleExceptionHandler : IExceptionHandler
     {
-        if (exception is not BusinessRuleException ex)
-            return false;
-
-        context.Response.StatusCode = StatusCodes.Status409Conflict;
-
-        var problemDetails = new
+        public async ValueTask<bool> TryHandleAsync(
+            HttpContext context,
+            Exception exception,
+            CancellationToken cancellationToken)
         {
-            type = "https://tools.ietf.org/html/rfc7231#section-6.5.9",
-            title = "Conflict",
-            status = 409,
-            detail = "No se puede procesar la solicitud.",
-            instance = context.Request.Path.Value,
-            errorCode = ex.ErrorCode,
-            errorMessage = ex.Message,
+            if (exception is not BusinessRuleException ex)
+                return false;
 
             
-            correlationId = context.TraceIdentifier
-        };
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
 
-        await context.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
-        return true; 
+            
+            var correlationId = context.Request.Headers["X-Correlation-Id"].FirstOrDefault()
+                                ?? context.TraceIdentifier;
+
+            var problemDetails = new
+            {
+                type = "https://tools.ietf.org/html/rfc7231#section-6.5.9",
+                title = "Conflict",
+                status = StatusCodes.Status409Conflict,
+                detail = "No se puede procesar la solicitud por un conflicto de reglas de negocio.",
+                instance = context.Request.Path.Value,
+                errorCode = ex.ErrorCode,
+                errorMessage = ex.Message,
+                correlationId = correlationId // Rastreo inter-servicios [cite: 34]
+            };
+
+            await context.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+            return true;
+        }
     }
 }
