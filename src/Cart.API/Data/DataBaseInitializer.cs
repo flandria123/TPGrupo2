@@ -3,20 +3,20 @@ using Microsoft.Data.Sqlite;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 
-namespace CartPI.Data;
-
-public class DatabaseInitializer(IConfiguration config)
+namespace CartPI.Data
 {
-    private readonly string _connectionString = config.GetConnectionString("DefaultConnection")
-                                               ?? "Data Source=app.db";
-
-    public void Initialize()
+    public class DatabaseInitializer(IConfiguration config)
     {
-        using var connection = new SqliteConnection(_connectionString);
-        connection.Open();
+        private readonly string _connectionString = config.GetConnectionString("DefaultConnection")
+                                                   ?? "Data Source=app.db";
 
-        // Creción de las tablas siguiendo el modelo 
-        connection.Execute("""
+        public void Initialize()
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            // Creción de las tablas siguiendo el modelo 
+            connection.Execute("""
             -- Tabla de cabecera del carrito
             CREATE TABLE IF NOT EXISTS carts (
                 usuario_id          TEXT PRIMARY KEY, -- Guid como string
@@ -33,31 +33,31 @@ public class DatabaseInitializer(IConfiguration config)
             );
         """);
 
-        SeedData(connection);
+            SeedData(connection);
 
 
-    }
+        }
 
 
-    private void SeedData(SqliteConnection connection)
-    {
-        // 1. Verificamos si ya hay datos para no duplicar
-        var count = connection.ExecuteScalar<int>("SELECT COUNT(*) FROM carts");
-        if (count > 0) return;
+        private void SeedData(SqliteConnection connection)
+        {
+            // 1. Verificamos si ya hay datos para no duplicar
+            var count = connection.ExecuteScalar<int>("SELECT COUNT(*) FROM carts");
+            if (count > 0) return;
 
-        // 2. Definimos IDs fijos ( mismos que en Products y Users )
-        var usuarioId = "21b75cee-f8f6-4261-a370-21b16c40967e";
-        var productoId1 = "11111111-1111-1111-1111-111111111111"; // Ej: Notebook
-        var productoId2 = "22222222-2222-2222-2222-222222222222"; // Ej: Auriculares
+            // 2. Definimos IDs fijos ( mismos que en Products y Users )
+            var usuarioId = "21b75cee-f8f6-4261-a370-21b16c40967e";
+            var productoId1 = "11111111-1111-1111-1111-111111111111"; // Ej: Notebook
+            var productoId2 = "22222222-2222-2222-2222-222222222222"; // Ej: Auriculares
 
-        // 3. Insertamos la cabecera del carrito
-        connection.Execute("""
+            // 3. Insertamos la cabecera del carrito
+            connection.Execute("""
         INSERT INTO carts (usuario_id, fecha_actualizacion)
         VALUES (@UsuarioId, datetime('now'))
     """, new { UsuarioId = usuarioId });
 
-        // 4. Insertamos múltiples ítems para probar la lista
-        connection.Execute("""
+            // 4. Insertamos múltiples ítems para probar la lista
+            connection.Execute("""
         INSERT INTO cart_items (usuario_id, producto_id, cantidad)
         VALUES (@UsuarioId, @ProductoId, @Cantidad)
     """, new[] {
@@ -66,9 +66,9 @@ public class DatabaseInitializer(IConfiguration config)
     });
 
 
+        }
     }
+
 }
-
-
 
 

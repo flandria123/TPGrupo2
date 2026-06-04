@@ -1,5 +1,5 @@
 <Solution>
   <Project Path="Ecommerce.App/Ecommerce.App.csproj" />
-  <Project Path="src/Cart.API/Cart.API.csproj" Id="c57ede02-cb83-4897-b8c8-e13d27829ae6" />
+  <Project Path="src/Cart.API/CartAPI.csproj" Id="c57ede02-cb83-4897-b8c8-e13d27829ae6" />
   <Project Path="src/Users.API/Users.API.csproj" Id="9615e659-f226-4868-9241-dd46fa06f8c3" />
 </Solution>

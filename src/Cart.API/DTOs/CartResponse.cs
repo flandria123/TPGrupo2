@@ -1,11 +1,13 @@
-﻿namespace CartAPI.DTOs;
-
-public class CartResponse
+﻿namespace CartAPI.DTOs
 {
-    public Guid UsuarioId { get; set; }
 
-    public List<CartItemResponse> Items { get; set; }
-        = new();
+    public class CartResponse
+    {
+        public Guid UsuarioId { get; set; }
 
-    public DateTime FechaActualizacion { get; set; }
+        public List<CartItemResponse> Items { get; set; }
+            = new();
+
+        public DateTime FechaActualizacion { get; set; }
+    }
 }

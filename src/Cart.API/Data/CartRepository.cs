@@ -1,187 +1,110 @@
-﻿using CartAPI.Models;
-using Dapper;
+﻿using Dapper;
 using Microsoft.Data.Sqlite;
+using CartAPI.Models; 
 
-namespace CartAPI.Data
+namespace CartAPI.Data;
+
+public class CartRepository
 {
-    public class CartRepository
+    private readonly IConfiguration _config;
+
+    public CartRepository(IConfiguration config) => _config = config;
+
+    private SqliteConnection CreateConnection() =>
+        new(_config.GetConnectionString("DefaultConnection") ?? "Data Source=app.db");
+
+    // ── OBTENER CARRITO ──
+    public async Task<CartAPI.Models.Cart?> GetCartByUserIdAsync(Guid userId)
     {
-        private readonly IConfiguration _config;
-        private readonly string _connectionString;
+        using var conn = CreateConnection();
+        var sql = """
+            SELECT c.UsuarioId, c.FechaActualizacion, 
+                   ci.ProductoId, ci.Cantidad 
+            FROM Carts c
+            LEFT JOIN CartItems ci ON c.UsuarioId = ci.UsuarioId
+            WHERE c.UsuarioId = @UserId
+        """;
 
-        public CartRepository(IConfiguration config)
-        {
-            _config = config;
+        var cartDictionary = new Dictionary<Guid, CartAPI.Models.Cart>();
 
-            _connectionString =
-                _config.GetConnectionString("DefaultConnection")
-                ?? "Data Source=app.db";
-        }
-
-        // ──────────────────────────────────────────────────────────────────────────
-        // OBTENER CARRITO POR USUARIO
-        // ──────────────────────────────────────────────────────────────────────────
-        public async Task<Cart?> GetByUserIdAsync(Guid usuarioId)
-        {
-            using var connection =
-                new SqliteConnection(_connectionString);
-
-            connection.Open();
-
-            // Buscar cabecera carrito
-            var cart = await connection.QueryFirstOrDefaultAsync<Cart>(
-                """
-            SELECT
-                usuario_id AS UsuarioId,
-                fecha_actualizacion AS FechaActualizacion
-            FROM carts
-            WHERE usuario_id = @UsuarioId
-            """,
-                new
-                {
-                    UsuarioId = usuarioId.ToString()
-                });
-
-            if (cart == null)
-                return null;
-
-            // Buscar items del carrito
-            var items = await connection.QueryAsync<CartItem>(
-                """
-            SELECT
-                producto_id AS ProductoId,
-                cantidad AS Cantidad
-            FROM cart_items
-            WHERE usuario_id = @UsuarioId
-            """,
-                new
-                {
-                    UsuarioId = usuarioId.ToString()
-                });
-
-            cart.Items = items.ToList();
-
-            return cart;
-        }
-
-        // ──────────────────────────────────────────────────────────────────────────
-        // CREAR CARRITO
-        // ──────────────────────────────────────────────────────────────────────────
-        public async Task CreateAsync(Cart cart)
-        {
-            using var connection =
-                new SqliteConnection(_connectionString);
-
-            connection.Open();
-
-            // Insertar cabecera carrito
-            await connection.ExecuteAsync(
-                """
-            INSERT INTO carts (
-                usuario_id,
-                fecha_actualizacion
-            )
-            VALUES (
-                @UsuarioId,
-                @FechaActualizacion
-            )
-            """,
-                new
-                {
-                    UsuarioId = cart.UsuarioId.ToString(),
-                    FechaActualizacion = cart.FechaActualizacion
-                });
-
-            // Insertar items
-            foreach (var item in cart.Items)
+        await conn.QueryAsync<CartAPI.Models.Cart, CartItem, CartAPI.Models.Cart>(
+            sql,
+            (cart, cartItem) =>
             {
-                await connection.ExecuteAsync(
-                    """
-                INSERT INTO cart_items (
-                    usuario_id,
-                    producto_id,
-                    cantidad
-                )
-                VALUES (
-                    @UsuarioId,
-                    @ProductoId,
-                    @Cantidad
-                )
-                """,
-                    new
-                    {
-                        UsuarioId = cart.UsuarioId.ToString(),
-                        ProductoId = item.ProductoId.ToString(),
-                        Cantidad = item.Cantidad
-                    });
-            }
-        }
+                if (!cartDictionary.ContainsKey(cart.UsuarioId))
+                {
+                    cart.Items = new List<CartItem>();
+                    cartDictionary.Add(cart.UsuarioId, cart);
+                }
 
-        // ──────────────────────────────────────────────────────────────────────────
-        // ACTUALIZAR CARRITO
-        // ──────────────────────────────────────────────────────────────────────────
-        public async Task UpdateAsync(Cart cart)
+                var currentCart = cartDictionary[cart.UsuarioId];
+
+                if (cartItem != null && cartItem.ProductoId != Guid.Empty)
+                {
+                    currentCart.Items.Add(cartItem);
+                }
+                return currentCart;
+            },
+            new { UserId = userId },
+            null, true, "ProductoId"
+        );
+
+        return cartDictionary.Values.FirstOrDefault();
+    }
+
+    // ── CREAR O ACTUALIZAR CARRITO ──
+    public async Task CreateOrUpdateCartAsync(CartAPI.Models.Cart cart)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        using var transaction = conn.BeginTransaction();
+
+        try
         {
-            using var connection =
-                new SqliteConnection(_connectionString);
+            var sqlCart = """
+                INSERT INTO Carts (UsuarioId, FechaActualizacion) 
+                VALUES (@UsuarioId, @FechaActualizacion)
+                ON CONFLICT(UsuarioId) DO UPDATE SET 
+                FechaActualizacion = excluded.FechaActualizacion
+            """;
 
-            connection.Open();
+            await conn.ExecuteAsync(sqlCart, new { cart.UsuarioId, cart.FechaActualizacion }, transaction);
 
-            // Actualizar fecha carrito
-            await connection.ExecuteAsync(
-                """
-            UPDATE carts
-            SET fecha_actualizacion = @FechaActualizacion
-            WHERE usuario_id = @UsuarioId
-            """,
-                new
-                {
-                    UsuarioId = cart.UsuarioId.ToString(),
-                    FechaActualizacion = cart.FechaActualizacion
-                });
+            await conn.ExecuteAsync(
+                "DELETE FROM CartItems WHERE UsuarioId = @UsuarioId",
+                new { cart.UsuarioId }, transaction);
 
-            // Estrategia simple para el TP:
-            // borrar todos los items y recrearlos
-
-            await connection.ExecuteAsync(
-                """
-            DELETE FROM cart_items
-            WHERE usuario_id = @UsuarioId
-            """,
-                new
-                {
-                    UsuarioId = cart.UsuarioId.ToString()
-                });
-
-            // Reinsertar items actualizados
-            foreach (var item in cart.Items)
+            if (cart.Items != null)
             {
-                await connection.ExecuteAsync(
-                    """
-                INSERT INTO cart_items (
-                    usuario_id,
-                    producto_id,
-                    cantidad
-                )
-                VALUES (
-                    @UsuarioId,
-                    @ProductoId,
-                    @Cantidad
-                )
-                """,
-                    new
+                var sqlItems = """
+                    INSERT INTO CartItems (UsuarioId, ProductoId, Cantidad)
+                    VALUES (@UsuarioId, @ProductoId, @Cantidad)
+                """;
+
+                foreach (var item in cart.Items)
+                {
+                    await conn.ExecuteAsync(sqlItems, new
                     {
-                        UsuarioId = cart.UsuarioId.ToString(),
-                        ProductoId = item.ProductoId.ToString(),
-                        Cantidad = item.Cantidad
-                    });
+                        cart.UsuarioId,
+                        item.ProductoId,
+                        item.Cantidad
+                    }, transaction);
+                }
             }
-
-
+            transaction.Commit();
         }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
 
-        
-
-
+    // ── ELIMINAR CARRITO ──
+    public async Task DeleteCartAsync(Guid userId)
+    {
+        using var conn = CreateConnection();
+        await conn.ExecuteAsync("DELETE FROM CartItems WHERE UsuarioId = @UserId", new { UserId = userId });
+        await conn.ExecuteAsync("DELETE FROM Carts WHERE UsuarioId = @UserId", new { UserId = userId });
     }
 }

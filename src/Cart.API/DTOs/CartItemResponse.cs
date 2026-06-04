@@ -1,8 +1,13 @@
-﻿namespace CartAPI.DTOs;
-
-public class CartItemResponse
+﻿namespace CartAPI.DTOs
 {
-    public Guid ProductoId { get; set; }
+    public class CartItemResponse
+    {
+        public Guid ProductoId { get; set; }
 
-    public int Cantidad { get; set; }
+        public int Cantidad { get; set; }
+    }
+
+
+
+
 }

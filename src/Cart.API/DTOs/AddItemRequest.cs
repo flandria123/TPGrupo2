@@ -1,8 +1,10 @@
-﻿namespace CartAPI.DTOs;
-
-public class AddItemRequest
+﻿namespace CartAPI.DTOs
 {
-    public Guid ProductoId { get; set; }
+    public class AddItemRequest
+    {
+        public Guid ProductoId { get; set; }
 
-    public int Cantidad { get; set; }
+        public int Cantidad { get; set; }
+    }
+
 }
