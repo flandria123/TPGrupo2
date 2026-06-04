@@ -104,7 +104,27 @@ public class CartRepository
     public async Task DeleteCartAsync(Guid userId)
     {
         using var conn = CreateConnection();
-        await conn.ExecuteAsync("DELETE FROM CartItems WHERE UsuarioId = @UserId", new { UserId = userId });
-        await conn.ExecuteAsync("DELETE FROM Carts WHERE UsuarioId = @UserId", new { UserId = userId });
+        await conn.OpenAsync();
+        using var transaction = conn.BeginTransaction();
+
+        try
+        {
+            await conn.ExecuteAsync(
+                "DELETE FROM CartItems WHERE UsuarioId = @UserId",
+                new { UserId = userId },
+                transaction); // <-- Agregamos la transacción
+
+            await conn.ExecuteAsync(
+                "DELETE FROM Carts WHERE UsuarioId = @UserId",
+                new { UserId = userId },
+                transaction); // <-- Agregamos la transacción
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 }

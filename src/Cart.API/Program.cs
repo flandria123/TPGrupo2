@@ -20,7 +20,7 @@ builder.Services.AddHttpClient(
     client =>
     {
         client.BaseAddress =
-            new Uri("http://localhost:5002");
+            new Uri("http://localhost:7001");
     });
 
 builder.Services.AddSingleton<DatabaseInitializer>();

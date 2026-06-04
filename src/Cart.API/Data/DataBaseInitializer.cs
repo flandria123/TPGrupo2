@@ -47,8 +47,8 @@ namespace CartPI.Data
 
             // 2. Definimos IDs fijos ( mismos que en Products y Users )
             var usuarioId = "21b75cee-f8f6-4261-a370-21b16c40967e";
-            var productoId1 = "11111111-1111-1111-1111-111111111111"; // Ej: Notebook
-            var productoId2 = "22222222-2222-2222-2222-222222222222"; // Ej: Auriculares
+            var productoId1 = "3fa85f64-5717-4562-b3fc-2c963f66afa6"; // Ej: Notebook
+            var productoId2 = "abcdef12-3456-7890-abcd-ef1234567890"; // Ej: Libro
 
             // 3. Insertamos la cabecera del carrito
             connection.Execute("""
