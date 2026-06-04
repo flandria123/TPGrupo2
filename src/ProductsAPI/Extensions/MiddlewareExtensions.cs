@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Serilog;
 using Serilog.Events;
-using Users.API.Middleware;
+using ProductsAPI.Middleware;
 
 // se configura el middleware que intercepta cada request HTTP y genera el evento de log:
 
-namespace Users.API.Extensions
+namespace ProductsAPI.Extensions
 {
     public static class MiddlewareExtensions
     {
@@ -14,11 +14,11 @@ namespace Users.API.Extensions
         {
             // 1. Correlation ID Middleware
             
-           // app.UseMiddleware<CorrelationIdMiddleware>();
+            app.UseMiddleware<CorrelationIdMiddleware>();
 
             // 2. Audit Middleware
             
-            //app.UseMiddleware<AuditMiddleware>();
+            app.UseMiddleware<AuditMiddleware>();
 
             // 3. Serilog Request Logging
            

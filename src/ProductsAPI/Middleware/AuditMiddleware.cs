@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
-namespace Products.API.Middleware
+namespace ProductsAPI.Middleware
 {
     public class AuditMiddleware
     {

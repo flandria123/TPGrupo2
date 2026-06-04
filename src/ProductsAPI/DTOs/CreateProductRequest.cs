@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿namespace ProductsAPI.DTOs;
+
+using System.ComponentModel.DataAnnotations;
 
 public record CreateProductRequest(
 

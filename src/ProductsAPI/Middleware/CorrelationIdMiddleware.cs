@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Primitives;
 using Serilog.Context;
 
-namespace Products.API.Middleware
+namespace ProductsAPI.Middleware
 {
     public class CorrelationIdMiddleware
     {
