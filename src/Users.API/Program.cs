@@ -40,7 +40,7 @@ public partial class Program
         builder.Services.AddControllers();
 
         //REGISTRO DE ERRORES
-        builder.Services.AddExceptionHandler<ValidationExceptionHandler>(); // Agregado para USR-002
+        builder.Services.AddExceptionHandler<ValidationExceptionHandler>(); 
         builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
         builder.Services.AddExceptionHandler<BusinessRuleExceptionHandler>();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

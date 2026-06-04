@@ -51,7 +51,9 @@ namespace Users.API.Middleware
 
             // ── Escribir entrada de auditoría ──────────────────────────────────
 
-            var correlationId = context.Items["CorrelationId"]?.ToString();
+            
+            var correlationId = context.TraceIdentifier;
+
             _logger.LogInformation(
                 "AUDIT {@CorrelationId} {@Method} {@Path} {@StatusCode} {@RequestBody} {@ResponseBody}",
                 correlationId,
