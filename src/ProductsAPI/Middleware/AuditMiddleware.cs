@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
-namespace ProductsAPI.Middleware
+namespace Products.API.Middleware
 {
     public class AuditMiddleware
     {
@@ -24,21 +24,8 @@ namespace ProductsAPI.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // 1. Generar o propagar el X-Correlation-Id (Requisito 5.5)
-            if (!context.Request.Headers.TryGetValue("X-Correlation-Id", out var correlationIdValues))
-            {
-                correlationIdValues = Guid.NewGuid().ToString();
-                context.Request.Headers["X-Correlation-Id"] = correlationIdValues;
-            }
-            var correlationId = correlationIdValues.ToString();
-            context.Items["CorrelationId"] = correlationId;
-
-            // Inyectarlo en los headers de la respuesta para el cliente
-            context.Response.OnStarting(() =>
-            {
-                context.Response.Headers["X-Correlation-Id"] = correlationId;
-                return Task.CompletedTask;
-            });
+            // 1. Leer el Correlation ID que fue generado previamente por el CorrelationIdMiddleware
+            var correlationId = context.Items["CorrelationId"]?.ToString() ?? "N/A";
 
             // 2. Loggear Inicio del request (Requisito 5.3)
             var sw = Stopwatch.StartNew();
@@ -62,7 +49,7 @@ namespace ProductsAPI.Middleware
 
             try
             {
-                // Ejecutar el resto de la API
+                // Ejecutar el resto de la cadena de middlewares y llegar al Controller
                 await _next(context);
 
                 // 4. Capturar resultados y duración (Requisito 5.3)
@@ -75,7 +62,7 @@ namespace ProductsAPI.Middleware
 
                 var statusCode = context.Response.StatusCode;
 
-                // Extraer el errorCode si es un JSON de error (Requisito 5.3)
+                // Extraer el errorCode si la respuesta es un JSON estructurado de error
                 var responseJsonDict = TryParseAndSanitizeJson(responseBody, context.Request.Path);
                 string? errorCode = null;
 
@@ -84,7 +71,7 @@ namespace ProductsAPI.Middleware
                     errorCode = codeObj?.ToString();
                 }
 
-                // 5. Loggear Fin del request con niveles dinámicos (Requisito 5.3)
+                // 5. Loggear Fin del request con niveles dinámicos según exige el TP
                 if (statusCode >= 500)
                 {
                     // Errores inesperados como Error
@@ -94,7 +81,7 @@ namespace ProductsAPI.Middleware
                 }
                 else if (statusCode >= 400)
                 {
-                    // Errores de negocio como Warning
+                    // Errores de negocio/validación como Warning
                     _logger.LogWarning(
                         "FIN Request (WARNING) | Servicio: {Servicio} | Endpoint: {Method} {Path} | Status: {StatusCode} | Duracion: {Duracion}ms | CorrelationId: {CorrelationId} | ErrorCode: {ErrorCode} | Request: {@RequestBody} | Response: {@ResponseBody}",
                         ServicioName, context.Request.Method, context.Request.Path.Value, statusCode, sw.ElapsedMilliseconds, correlationId, errorCode, requestBody, responseJsonDict ?? (object)responseBody);
@@ -109,6 +96,7 @@ namespace ProductsAPI.Middleware
             }
             finally
             {
+                // Restaurar el stream original en caso de error crítico
                 context.Response.Body = originalResponseBody;
             }
         }
@@ -125,16 +113,10 @@ namespace ProductsAPI.Middleware
 
             try
             {
-                var jsonDict = JsonSerializer.Deserialize<Dictionary<string, object>>(raw);
-                if (jsonDict == null) return null;
-
-                if (path.Value?.Contains("/users") == true)
-                {
-                    if (jsonDict.ContainsKey("password")) jsonDict["password"] = "********";
-                    if (jsonDict.ContainsKey("Password")) jsonDict["Password"] = "********";
-                }
-
-                return jsonDict;
+                // En Products.API no hay datos sensibles en los requests/responses 
+                // (como tarjetas de crédito o contraseñas), por lo que podemos 
+                // serializar el JSON directamente para que Serilog lo formatee lindo.
+                return JsonSerializer.Deserialize<Dictionary<string, object>>(raw);
             }
             catch
             {
