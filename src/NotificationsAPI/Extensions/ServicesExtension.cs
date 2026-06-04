@@ -49,7 +49,7 @@ public static class ServicesExtensions
         // Configuración del cliente para validar la existencia del usuario 
         services.AddHttpClient("UsersAPI", client =>
         {
-            client.BaseAddress = new Uri("https://localhost:7001"); // Ajustar puerto de tu Users.API local
+            client.BaseAddress = new Uri("https://localhost:7002"); // Ajustar puerto de tu Users.API local
         });
 
        
