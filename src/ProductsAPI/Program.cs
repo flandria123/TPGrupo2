@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Ecommerce.App.Extensions;
 using ProductsAPI.ExceptionHandlers;
+using ProductsAPI.Extensions;
+
 
 public partial class Program
 {
@@ -16,16 +18,11 @@ public partial class Program
         // 2. Servicios de la aplicación
         builder.Services.AddAppServices();
 
-        // 3. Exception Handlers
-        builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
-        builder.Services.AddExceptionHandler<BusinessRuleExceptionHandler>();
-        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-        builder.Services.AddProblemDetails();
-
+        
         app.UseExceptionHandler();
 
         // 4. Middlewares
-        app.UseAppMiddleware();
+       // app.UseAppMiddleware();
 
         // 5. Endpoints
         app.MapControllers();

@@ -23,7 +23,7 @@ public class ProductService : IProductService
         _httpClientFactory = httpClientFactory;
     }
 
-    // 👇 FIRMA CORRECTA: Task<IEnumerable<ProductResponse>>
+    
     public async Task<IEnumerable<ProductResponse>> GetAllAsync(string? categoria, string? nombre)
     {
         var products = await _repository.GetAllAsync(categoria, nombre);
@@ -34,7 +34,7 @@ public class ProductService : IProductService
         ));
     }
 
-    // 👇 FIRMA CORRECTA: Task<ProductResponse>
+    
     public async Task<ProductResponse> GetByIdAsync(Guid id)
     {
         var product = await _repository.GetByIdAsync(id);
@@ -51,7 +51,7 @@ public class ProductService : IProductService
         );
     }
 
-    // 👇 FIRMA CORRECTA: Task<ProductResponse>
+    
     public async Task<ProductResponse> CreateAsync(CreateProductRequest request)
     {
         var existe = await _repository.ExistsByNameAndCategoryAsync(request.Nombre, request.Categoria);
@@ -116,7 +116,7 @@ public class ProductService : IProductService
             throw new NotFoundException("PRD-001", "Producto no encontrado.");
         }
 
-        // ── COMUNICACIÓN ENTRE MICROSERVICIOS: Validar órdenes activas 
+        
         var ordersClient = _httpClientFactory.CreateClient("OrdersAPI");
 
         try

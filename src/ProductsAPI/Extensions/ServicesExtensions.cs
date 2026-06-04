@@ -29,7 +29,7 @@ public static class ServicesExtensions
                 Description = "Microservicio de gestión de catálogo de productos."
             });
 
-            // Habilita la lectura de tus comentarios ///
+            
             var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
             var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
             options.IncludeXmlComments(xmlPath);
@@ -38,7 +38,7 @@ public static class ServicesExtensions
         // 3. COMUNICACIÓN HTTP ENTRE MICROSERVICIOS 
         services.AddHttpClient("OrdersAPI", client =>
         {
-            // Ajustá este puerto al que use tu OrdersAPI en local
+            
             client.BaseAddress = new Uri("https://localhost:7003");
         });
 
