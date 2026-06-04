@@ -43,11 +43,11 @@ namespace OrdersAPI.Extensions
             // Configuración de los clientes para consultar stock y validar identidades
             services.AddHttpClient("UsersAPI", client =>
             {
-                client.BaseAddress = new Uri("https://localhost:7001"); // Ajustar puerto del grupo
+                client.BaseAddress = new Uri("https://localhost:7002"); // Ajustar puerto del grupo
             });
             services.AddHttpClient("ProductsAPI", client =>
             {
-                client.BaseAddress = new Uri("https://localhost:7002"); // Ajustar puerto del grupo
+                client.BaseAddress = new Uri("https://localhost:7001"); // Ajustar puerto del grupo
             });
 
             // 5. MANEJO GLOBAL DE EXCEPCIONES (IExceptionHandler + ProblemDetails)
