@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 
-namespace CartPI.Data
+namespace CartAPI.Data
 {
     public class DatabaseInitializer(IConfiguration config)
     {

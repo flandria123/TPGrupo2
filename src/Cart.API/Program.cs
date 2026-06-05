@@ -1,44 +1,84 @@
-using Cart.API.Data;
 using CartAPI.Data;
-using CartAPI.Services;
-using CartPI.Data;
+using CartAPI.Extensions;
 using Dapper;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
+using CartAPI.ExceptionHandlers;
 
 
-var builder = WebApplication.CreateBuilder(args);
-
-// ──────────────────────────────────────────────────────────────────────────
-// SERVICES
-// ──────────────────────────────────────────────────────────────────────────
-
-builder.Services.AddScoped<CartRepository>();
-
-builder.Services.AddScoped<ICartService, CartService>();
-
-builder.Services.AddHttpClient(
-    "ProductsAPI",
-    client =>
-    {
-        client.BaseAddress =
-            new Uri("http://localhost:7001");
-    });
-
-builder.Services.AddSingleton<DatabaseInitializer>();
-
-SqlMapper.AddTypeHandler(new GuidTypeHandler());
-
-var app = builder.Build(); // Hay que borrarlo antes del merge porque despues lo vamos a integrar todo
 
 
-// ──────────────────────────────────────────────────────────────────────────
-// DATABASE INITIALIZATION
-// ──────────────────────────────────────────────────────────────────────────
-
-using (var scope = app.Services.CreateScope())
+public partial class Program
 {
-    var initializer =
-        scope.ServiceProvider
-            .GetRequiredService<DatabaseInitializer>();
+    private static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
 
-    initializer.Initialize();
+        // ─── 1. CONFIGURACIÓN DE SERVICIOS (Antes del Build) ───
+
+        // Guid Type
+        SqlMapper.AddTypeHandler(new GuidTypeHandler());
+
+        // 1. Logging (Usa tu extensión) [cite: 132]
+        builder.AddAppLogging();
+
+        // 2. Servicios de la aplicación (Usa tu extensión) [cite: 135]
+        builder.Services.AddAppServices();
+
+        // Agregar Swagger (Necesario para el Req 5.1) [cite: 32]
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+
+
+        var app = builder.Build();
+
+        // ─── 2. INICIALIZACIÓN ───
+
+        // Inicializar la Base de Datos de Productos 
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+
+            services.GetRequiredService<DatabaseInitializer>().Initialize();
+        }
+
+        // ─── 3. PIPELINE DE MIDDLEWARES Y RUTAS ───
+
+        // Activar Swagger solo en desarrollo [cite: 72]
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
+
+        app.UseAppMiddleware();
+        app.UseExceptionHandler();
+
+        // 5. Endpoints
+        app.MapControllers();
+
+        // Mapear Health Checks  
+        app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            ResponseWriter = HealthChecks.UI.Client.UIResponseWriter.WriteHealthCheckUIResponse
+        });
+
+
+        app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains("api"),
+            ResponseWriter = HealthChecks.UI.Client.UIResponseWriter.WriteHealthCheckUIResponse
+        });
+
+
+        // Health Check de Readiness (que la base de datos esté lista)
+        app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains("database"),
+            ResponseWriter = HealthChecks.UI.Client.UIResponseWriter.WriteHealthCheckUIResponse
+        });
+
+        app.Run();
+    }
 }

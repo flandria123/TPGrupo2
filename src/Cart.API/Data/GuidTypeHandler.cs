@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using System.Data;
 
-namespace Cart.API.Data
+namespace CartAPI.Data
 {
     public class GuidTypeHandler : SqlMapper.TypeHandler<Guid>
     {
