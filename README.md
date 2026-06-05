@@ -81,7 +81,7 @@ graph TD
     Client((Swagger UI / Cliente)):::ui
 
     %% Microservicios
-    subgraph Arquitectura de Microservicios UBA
+    subgraph microservicios [Arquitectura de Microservicios UBA]
         direction LR
         P[Products.API<br/>Puerto: 7001]:::api
         U[Users.API<br/>Puerto: 7002]:::api
@@ -91,7 +91,7 @@ graph TD
     end
 
     %% Bases de Datos
-    subgraph Bases de Datos SQLite Local
+    subgraph dbs [Bases de Datos SQLite Local]
         DB_P[(app.db)]:::db
         DB_U[(app.db)]:::db
         DB_O[(app.db)]:::db
@@ -117,5 +117,3 @@ graph TD
     O --- DB_O
     C --- DB_C
     N --- DB_N
-
---------------------------------------------------------------------------------
