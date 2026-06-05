@@ -1,3 +1,8 @@
 <Solution>
+ 
   <Project Path="src/ProductsAPI/ProductsAPI.csproj" />
+
+  <Project Path="Ecommerce.App/Ecommerce.App.csproj" />
+  <Project Path="OrdersAPI/OrdersAPI.csproj" Id="43ae45ff-3bd0-4200-959f-746e28c90586" />
+
 </Solution>
