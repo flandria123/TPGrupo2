@@ -14,18 +14,18 @@ public partial class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // ─── 1. CONFIGURACIÓN DE SERVICIOS (Antes del Build) ───
+        // ─── 1. CONFIGURACIÓN DE SERVICIOS  ───
 
         // Guid Type
         SqlMapper.AddTypeHandler(new GuidTypeHandler());
 
-        // 1. Logging (Usa tu extensión) [cite: 132]
+        // 1. Logging 
         builder.AddAppLogging();
 
-        // 2. Servicios de la aplicación (Usa tu extensión) [cite: 135]
+        // 2. Servicios de la aplicación 
         builder.Services.AddAppServices();
 
-        // Agregar Swagger (Necesario para el Req 5.1) [cite: 32]
+        // Agregar Swagger 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
@@ -34,7 +34,7 @@ public partial class Program
 
         // ─── 2. INICIALIZACIÓN ───
 
-        // Inicializar la Base de Datos de Productos 
+        // Inicializar la Base de Datos de Carro 
         using (var scope = app.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
@@ -44,7 +44,7 @@ public partial class Program
 
         // ─── 3. PIPELINE DE MIDDLEWARES Y RUTAS ───
 
-        // Activar Swagger solo en desarrollo [cite: 72]
+        // Activar Swagger solo en desarrollo
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
