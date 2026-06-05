@@ -77,6 +77,13 @@ namespace CartAPI.Services
             _logger.LogInformation("Actualizando cantidad del producto {ProductoId} a {NuevaCantidad} en carrito {UserId}",
                 productoId, request.Cantidad, usuarioId);
 
+            // VALIDACIÓN CRT-004: Cantidad inválida
+            if (request.Cantidad <= 0)
+            {
+                _logger.LogWarning("Intento de actualizar a cantidad inválida ({Cantidad})", request.Cantidad);
+                throw new BusinessRuleException("CRT-004", "La cantidad debe ser mayor a cero.");
+            }
+
             var cart = await _cartRepository.GetCartByUserIdAsync(usuarioId);
 
             // VALIDACIÓN CRT-001
