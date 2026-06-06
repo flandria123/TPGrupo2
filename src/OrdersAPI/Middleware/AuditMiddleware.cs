@@ -36,18 +36,33 @@ namespace Orders.API.Middleware
 
             // ── Capturar Response body ─────────────────────────────────────────
             var originalResponseBody = context.Response.Body;
-            using var memStream = new MemoryStream();
+            var memStream = new MemoryStream();
             context.Response.Body = memStream;
 
-            await _next(context); // ejecutar el pipeline y los controladores
+            string responseBody = string.Empty;
 
-            memStream.Position = 0;
-            var responseBody = await new StreamReader(memStream).ReadToEndAsync();
+            try
+            {
+                await _next(context); // ejecutar el pipeline y los controladores
 
-            // Copiar la respuesta de vuelta al stream original para que le llegue al cliente
-            memStream.Position = 0;
-            await memStream.CopyToAsync(originalResponseBody);
-            context.Response.Body = originalResponseBody;
+                // Si todo sale bien (código 200/201/204), leemos y copiamos la respuesta
+                memStream.Position = 0;
+                responseBody = await new StreamReader(memStream).ReadToEndAsync();
+
+                memStream.Position = 0;
+                await memStream.CopyToAsync(originalResponseBody);
+            }
+            finally
+            {
+                // ¡LÍNEA SALVAVIDAS!
+                // Se ejecuta SIEMPRE. Si el Controller lanza una ValidationException, 
+                // la ejecución salta directo aquí. Le devolvemos a .NET su stream original
+                // para que el ValidationExceptionHandler pueda dibujar el error 400.
+                context.Response.Body = originalResponseBody;
+
+                // Destruimos la memoria temporal de forma segura
+                memStream.Dispose();
+            }
 
             // ── Escribir entrada de auditoría ──────────────────────────────────
             _logger.LogInformation(
@@ -58,6 +73,7 @@ namespace Orders.API.Middleware
                 TryParseJson(requestBody),
                 TryParseJson(responseBody));
         }
+
 
         private static async Task<string> ReadBodyAsync(Stream body)
         {
