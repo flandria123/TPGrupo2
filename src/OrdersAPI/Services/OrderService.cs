@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using OrdersAPI.Data;
 using OrdersAPI.DTOs;
+using OrdersAPI.DTOS;
 using OrdersAPI.Exceptions;
 using OrdersAPI.Models;
 using System.Net.Http.Json;
@@ -32,6 +33,7 @@ public class OrderService : IOrderService
 
     public async Task<OrderResponse> GetOrderByIdAsync(Guid id)
     {
+        
         // Buscamos la entidad real usando el método privado
         var order = await GetOrderEntityByIdAsync(id);
 
@@ -118,7 +120,7 @@ public class OrderService : IOrderService
         return MapToResponse(nuevaOrden);
     }
 
-    public async Task UpdateStatusAsync(Guid id, string nuevoEstado)
+    public async Task<UpdateStatusResponse> UpdateStatusAsync(Guid id, string nuevoEstado)
     {
         var order = await GetOrderEntityByIdAsync(id);
 
@@ -132,7 +134,16 @@ public class OrderService : IOrderService
 
         // Actualización real en la base de datos habilitada
         await _repository.UpdateAsync(order);
+
+        // Retornamos el DTO exacto que pide la cátedra para la respuesta 200 OK
+        return new UpdateStatusResponse(
+            Id: order.Id,
+            Estado: order.Estado,
+            FechaActualizacion: DateTime.UtcNow
+        );
     }
+
+
 
     // ========================================================================
     // MÉTODOS PRIVADOS DE APOYO (Helpers)
