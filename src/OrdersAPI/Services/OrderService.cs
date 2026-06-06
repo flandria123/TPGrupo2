@@ -61,7 +61,7 @@ public class OrderService : IOrderService
 
         if (!userResponse.IsSuccessStatusCode)
         {
-            throw new BusinessRuleException("ORD-003", "El usuario especificado no existe o no es válido.");
+            throw new NotFoundException("ORD-003", "El usuario especificado no existe o no es válido.");
         }
 
         // ====================================================================
@@ -77,7 +77,7 @@ public class OrderService : IOrderService
 
             if (!productResponse.IsSuccessStatusCode)
             {
-                throw new BusinessRuleException("ORD-004", $"El producto con ID {item.ProductoId} no existe en el catálogo.");
+                throw new NotFoundException("ORD-004", $"El producto con ID {item.ProductoId} no existe en el catálogo.");
             }
 
             var productData = await productResponse.Content.ReadFromJsonAsync<ProductExternalResponse>();
