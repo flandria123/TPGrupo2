@@ -23,8 +23,36 @@ namespace Users.API.Services
         }
 
         // ──────────────────────────────────────────────────────────────────────────
+        // MÉTODO GET BY ID (Agregado para validación de Orders.API)
+        //──────────────────────────────────────────────────────────────────────────
+        public async Task<UserResponse?> GetByIdAsync(Guid id)
+        {
+            // Buscamos el usuario en la base de datos
+            var user = await _userRepository.GetByIdAsync(id);
+
+            // Si no existe, devolvemos nulo para que el Controller devuelva 404
+            if (user == null)
+            {
+                return null;
+            }
+
+            // Mapeamos a UserResponse (sin exponer el PasswordHash)
+            return new UserResponse(
+              user.Id,
+              user.Nombre,
+              user.Apellido,
+              user.Email,
+              user.FechaRegistro,
+              user.Activo
+            );
+        }
+
+
+        // ──────────────────────────────────────────────────────────────────────────
         // REGISTRO DE USUARIO
         // ──────────────────────────────────────────────────────────────────────────
+
+
         public async Task<UserResponse> RegisterAsync(CreateItemRequest request)
         {
             // Validación USR-002 para Registro [1, 4]

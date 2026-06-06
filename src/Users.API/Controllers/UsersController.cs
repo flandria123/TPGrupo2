@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Users.API.DTOs;
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Users.API.DTOs; 
 using Users.API.Services;
-using static Users.API.Services.UserService;
+using Users.API.Data;
 
 namespace Users.API.Controllers
 {
@@ -18,6 +21,27 @@ namespace Users.API.Controllers
             _userService = userService;
         }
 
+        
+        /// <summary>
+        /// Obtiene un usuario por ID. Utilizado principalmente para validación entre microservicios.
+        /// </summary>
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            // OJO: Asegúrate de tener este método en tu IUserService
+            var user = await _userService.GetByIdAsync(id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(user);
+        }
+
+        
         /// <summary>
         /// Registra un nuevo usuario en el sistema.
         /// </summary>
@@ -56,9 +80,9 @@ namespace Users.API.Controllers
         /// 
         /// </remarks>
         /// <param name="request">Datos del usuario (Nombre, Apellido, Email, Password).</param>
-        /// <response code="201">Usuario creado con éxito. El campo PasswordHash no se incluye en la respuesta [2].</response>
-        /// <response code="400">Los datos del usuario son inválidos (USR-002) [2].</response>
-        /// <response code="409">El email ya está registrado (USR-001) [2, 4].</response>
+        /// <response code="201">Usuario creado con éxito. El campo PasswordHash no se incluye en la respuesta [1].</response>
+        /// <response code="400">Los datos del usuario son inválidos (USR-002) [1].</response>
+        /// <response code="409">El email ya está registrado (USR-001) [1, 2].</response>
         /// <response code="500">Error interno al procesar el usuario (USR-006) [3].</response>
         [HttpPost("register")]
         [ProducesResponseType(typeof(UserResponse), StatusCodes.Status201Created)]
@@ -68,9 +92,12 @@ namespace Users.API.Controllers
         public async Task<IActionResult> Register([FromBody] CreateItemRequest request)
         {
             var response = await _userService.RegisterAsync(request);
-            return CreatedAtAction(nameof(Register), new { id = response.Id }, response);
+
+            
+            return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
         }
 
+        
         /// <summary>
         /// Autentica a un usuario y maneja la regla de bloqueo de 3 intentos.
         /// </summary>
@@ -119,9 +146,9 @@ namespace Users.API.Controllers
         /// 
         /// </remarks>
         /// <response code="200">Login exitoso.</response>
-        /// <response code="400">Los datos de la petición son inválidos (USR-002) [2].</response>
-        /// <response code="401">Credenciales incorrectas (USR-003) [3, 5].</response>
-        /// <response code="403">Usuario bloqueado por intentos (USR-004) o seguridad (USR-005) [3, 6].</response>
+        /// <response code="400">Los datos de la petición son inválidos (USR-002) [1].</response>
+        /// <response code="401">Credenciales incorrectas (USR-003) [3, 4].</response>
+        /// <response code="403">Usuario bloqueado por intentos (USR-004) o seguridad (USR-005) [3, 5].</response>
         /// <response code="500">Error interno al procesar el usuario (USR-006) [3].</response>
         [HttpPost("login")]
         [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]

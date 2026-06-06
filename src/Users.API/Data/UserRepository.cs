@@ -14,6 +14,27 @@ namespace Users.API.Data
         private SqliteConnection CreateConnection() =>
             new(_config.GetConnectionString("DefaultConnection") ?? "Data Source=app.db");
 
+        // 
+        //  GET BY ID (Requerido para la validación desde Orders.API)
+        // 
+        public async Task<User?> GetByIdAsync(Guid id)
+        {
+            using var conn = CreateConnection();
+
+            // Usamos 'AS' para mapear las columnas en snake_case al formato PascalCase de C#
+            return await conn.QuerySingleOrDefaultAsync<User>(@"
+                SELECT id AS Id, 
+                       nombre AS Nombre, 
+                       apellido AS Apellido, 
+                       email AS Email, 
+                       password_hash AS PasswordHash, 
+                       fecha_registro AS FechaRegistro, 
+                       activo AS Activo, 
+                       intentos_fallidos AS IntentosFallidos
+                FROM usuarios 
+                WHERE id = @Id", new { Id = id.ToString() }); // .ToString() para SQLite
+        }
+
         // ── GET BY EMAIL (CRÍTICO PARA LOGIN Y REGISTRO) ─────────────────────
         public async Task<User?> GetByEmailAsync(string email)
         {

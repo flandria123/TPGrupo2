@@ -10,7 +10,9 @@ namespace Users.API.Services
             // Define que CUALQUIER clase que sea un UserService DEBE tener estas dos funciones.
             Task<UserResponse> RegisterAsync(CreateItemRequest request);
             Task<UserResponse> LoginAsync(LoginRequestUser request);
-        }
+
+            Task<UserResponse?> GetByIdAsync(Guid id);
+    }
 
 
     
