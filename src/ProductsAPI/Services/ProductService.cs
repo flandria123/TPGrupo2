@@ -37,6 +37,7 @@ public class ProductService : IProductService
     
     public async Task<ProductResponse> GetByIdAsync(Guid id)
     {
+       _logger.LogInformation("Buscando producto con ID {Id}", id);
         var product = await _repository.GetByIdAsync(id);
 
         if (product == null)
@@ -51,9 +52,19 @@ public class ProductService : IProductService
         );
     }
 
-    
+
     public async Task<ProductResponse> CreateAsync(CreateProductRequest request)
     {
+        // ── 1. VALIDACIÓN PRD-002: Falla rápido (Fail-Fast) antes de ir a la BD ──
+        if (string.IsNullOrWhiteSpace(request.Nombre) || request.Precio <= 0 || request.Stock < 0)
+        {
+            _logger.LogWarning("Intento de crear producto con datos inválidos. Nombre: '{Nombre}', Precio: {Precio}, Stock: {Stock}",
+                request.Nombre, request.Precio, request.Stock);
+
+            throw new ValidationException("PRD-002", "Los datos del producto son inválidos.");
+        }
+
+        // ── 2. VALIDACIÓN PRD-003: Buscar duplicados ──
         var existe = await _repository.ExistsByNameAndCategoryAsync(request.Nombre, request.Categoria);
         if (existe)
         {
@@ -61,6 +72,7 @@ public class ProductService : IProductService
             throw new BusinessRuleException("PRD-003", $"Ya existe un producto con ese nombre en la categoría '{request.Categoria}'.");
         }
 
+        // ── 3. CREACIÓN DEL PRODUCTO (Con la fecha exigida) ──
         var newProduct = new Product
         {
             Id = Guid.NewGuid(),
@@ -75,6 +87,7 @@ public class ProductService : IProductService
         await _repository.CreateAsync(newProduct);
         _logger.LogInformation("Producto creado con éxito: {Id}", newProduct.Id);
 
+        // ── 4. MAPEO AL DTO DE RESPUESTA ──
         return new ProductResponse(
             newProduct.Id, newProduct.Nombre, newProduct.Descripcion, newProduct.Precio,
             newProduct.Stock, newProduct.Categoria, newProduct.FechaCreacion
@@ -83,14 +96,27 @@ public class ProductService : IProductService
 
     public async Task<ProductResponse> UpdateAsync(Guid id, UpdateProductRequest request)
     {
+        // ── 1. VALIDACIÓN PRD-002: Fallar rápido si los datos son basur
+        // Regla de negocio: Precio mayor a 0, Stock mayor o igual a 0, Nombre requerido 
+        if (string.IsNullOrWhiteSpace(request.Nombre) || request.Precio <= 0 || request.Stock < 0)
+        {
+            _logger.LogWarning("Intento de actualizar producto con datos inválidos. Precio: {Precio}, Stock: {Stock}",
+                request.Precio, request.Stock);
+
+            throw new ValidationException("PRD-002", "Los datos del producto son inválidos.");
+        }
+
+        // ── 2. BUSCAR EL PRODUCTO ──
         var product = await _repository.GetByIdAsync(id);
 
+        // ── 3. VALIDACIÓN PRD-001: Verificar que exista ──
         if (product == null)
         {
             _logger.LogWarning("Intento de actualizar producto inexistente: {Id}", id);
             throw new NotFoundException("PRD-001", "Producto no encontrado.");
         }
 
+        // ── 4. ACTUALIZAR PROPIEDADES ──
         product.Nombre = request.Nombre;
         product.Descripcion = request.Descripcion;
         product.Precio = request.Precio;
@@ -115,7 +141,7 @@ public class ProductService : IProductService
             _logger.LogWarning("Intento de eliminar producto inexistente: {Id}", id);
             throw new NotFoundException("PRD-001", "Producto no encontrado.");
         }
-
+        
         
         var ordersClient = _httpClientFactory.CreateClient("OrdersAPI");
 
@@ -144,3 +170,4 @@ public class ProductService : IProductService
         _logger.LogInformation("Producto {Id} eliminado con éxito", id);
     }
 }
+

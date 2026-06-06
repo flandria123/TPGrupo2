@@ -13,13 +13,13 @@ public class ProductRepository
     private SqliteConnection CreateConnection() =>
         new(_config.GetConnectionString("DefaultConnection") ?? "Data Source=app.db");
 
-    // ── GET ALL (Con filtros opcionales de la Sección 4.1) ── [cite: 4]
+    // ── GET ALL 
     public async Task<IEnumerable<Product>> GetAllAsync(string? categoria, string? nombre)
     {
         using var conn = CreateConnection();
 
-        // Armamos la consulta dinámica según qué filtros vengan
-        var sql = "SELECT Id, Nombre, Descripcion, Precio, Stock, Categoria, FechaCreacion FROM Products WHERE 1=1";
+        
+        var sql = "SELECT Id, Nombre, Descripcion, Precio, Stock, Categoria, fecha_creacion AS FechaCreacion FROM Products WHERE 1=1";
 
         if (!string.IsNullOrEmpty(categoria))
             sql += " AND Categoria = @Categoria";
@@ -30,26 +30,30 @@ public class ProductRepository
         return await conn.QueryAsync<Product>(sql, new { Categoria = categoria, Nombre = nombre });
     }
 
-    // ── GET BY ID ── [cite: 96]
+    // ── GET BY ID ── 
     public async Task<Product?> GetByIdAsync(Guid id)
     {
         using var conn = CreateConnection();
+
+        
         return await conn.QuerySingleOrDefaultAsync<Product>(
-            "SELECT Id, Nombre, Descripcion, Precio, Stock, Categoria, FechaCreacion FROM Products WHERE Id = @Id",
+            "SELECT Id, Nombre, Descripcion, Precio, Stock, Categoria, fecha_creacion AS FechaCreacion FROM Products WHERE Id = @Id",
             new { Id = id });
     }
 
-    // ── CREATE ── [cite: 97]
+    // ── CREATE ── 
     public async Task CreateAsync(Product product)
     {
         using var conn = CreateConnection();
+
+        
         await conn.ExecuteAsync("""
-            INSERT INTO Products (Id, Nombre, Descripcion, Precio, Stock, Categoria, FechaCreacion)
+            INSERT INTO Products (Id, Nombre, Descripcion, Precio, Stock, Categoria, fecha_creacion)
             VALUES (@Id, @Nombre, @Descripcion, @Precio, @Stock, @Categoria, @FechaCreacion)
         """, product);
     }
 
-    // ── UPDATE ── [cite: 98]
+    // ── UPDATE ── 
     public async Task UpdateAsync(Product product)
     {
         using var conn = CreateConnection();
@@ -64,14 +68,14 @@ public class ProductRepository
         """, product);
     }
 
-    // ── DELETE ── [cite: 99]
+    // ── DELETE ── 
     public async Task DeleteAsync(Guid id)
     {
         using var conn = CreateConnection();
         await conn.ExecuteAsync("DELETE FROM Products WHERE Id = @Id", new { Id = id });
     }
 
-    // ── VALIDACIÓN PRD-003: Verificar duplicados ── [cite: 7, 10]
+    // ── VALIDACIÓN PRD-003: Verificar duplicados ── 
     public async Task<bool> ExistsByNameAndCategoryAsync(string nombre, string categoria)
     {
         using var conn = CreateConnection();
@@ -80,6 +84,4 @@ public class ProductRepository
             new { Nombre = nombre, Categoria = categoria });
         return count > 0;
     }
-
-    
 }
