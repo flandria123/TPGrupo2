@@ -32,7 +32,7 @@ namespace Users.API.Data
                        activo AS Activo, 
                        intentos_fallidos AS IntentosFallidos
                 FROM usuarios 
-                WHERE id = @Id", new { Id = id.ToString() }); // .ToString() para SQLite
+               WHERE LOWER(id) = LOWER(@Id)", new { Id = id.ToString() });  // .ToString() para SQLite
         }
 
         // ── GET BY EMAIL (CRÍTICO PARA LOGIN Y REGISTRO) ─────────────────────
