@@ -72,48 +72,57 @@ Para probar el flujo completo del E-Commerce (comunicación entre APIs), es nece
 
 ```mermaid
 graph TD
-    %% Definición de estilos
-    classDef api fill:#08427b,stroke:#000,stroke-width:2px,color:#fff
-    classDef db fill:#005f73,stroke:#000,stroke-width:1px,color:#fff
-    classDef ui fill:#e9c46a,stroke:#000,stroke-width:2px,color:#000
+    %% Definición del Cliente
+    Client(("Swagger UI / Cliente"))
 
-    %% Cliente
-    Client((Swagger UI / Cliente)):::ui
-
-    %% Microservicios
-    subgraph microservicios [Arquitectura de Microservicios UBA]
-        direction LR
-        P[Products.API<br/>Puerto: 7001]:::api
-        U[Users.API<br/>Puerto: 7002]:::api
-        O[Orders.API<br/>Puerto: 7003]:::api
-        C[Cart.API<br/>Puerto: 7004]:::api
-        N[Notifications.API<br/>Puerto: 7005]:::api
+    %% Definición de los Microservicios
+    subgraph Arquitectura de Microservicios UBA
+        ProductsAPI["Products.API\nPuerto: 7001"]
+        UsersAPI["Users.API\nPuerto: 7002"]
+        OrdersAPI["Orders.API\nPuerto: 7003"]
+        CartAPI["Cart.API\nPuerto: 7004"]
+        NotificationsAPI["Notifications.API\nPuerto: 7005"]
     end
+
+    %% Peticiones HTTP del Cliente a los Microservicios
+    Client -->|HTTP| ProductsAPI
+    Client -->|HTTP| UsersAPI
+    Client -->|HTTP| OrdersAPI
+    Client -->|HTTP| CartAPI
+    Client -->|HTTP| NotificationsAPI
+
+    %% Comunicación interna entre Microservicios (Validaciones cruzadas)
+    OrdersAPI -.->|Consulta Stock| ProductsAPI
+    OrdersAPI -.->|Valida Usuario| UsersAPI
+    CartAPI -.->|Consulta Stock| ProductsAPI
+    
+    %% NOTA: No hay conexión entre Cart.API y Orders.API
 
     %% Bases de Datos
-    subgraph dbs [Bases de Datos SQLite Local]
-        DB_P[(app.db)]:::db
-        DB_U[(app.db)]:::db
-        DB_O[(app.db)]:::db
-        DB_C[(app.db)]:::db
-        DB_N[(app.db)]:::db
+    subgraph Bases de Datos SQLite Local
+        DB1[("app.db")]
+        DB2[("app.db")]
+        DB3[("app.db")]
+        DB4[("app.db")]
+        DB5[("app.db")]
     end
 
-    %% Relaciones Cliente -> APIs
-    Client -->|HTTP| P
-    Client -->|HTTP| U
-    Client -->|HTTP| O
-    Client -->|HTTP| C
-    Client -->|HTTP| N
+    %% Conexión a DBs
+    ProductsAPI --- DB1
+    UsersAPI --- DB2
+    OrdersAPI --- DB3
+    CartAPI --- DB4
+    NotificationsAPI --- DB5
 
-    %% Comunicación interna entre Microservicios
-    O -.->|Consulta Stock| P
-    O -.->|Valida Usuario| U
-    C -.->|Consulta Stock| P
-
-    %% Relaciones APIs -> DBs
-    P --- DB_P
-    U --- DB_U
-    O --- DB_O
-    C --- DB_C
-    N --- DB_N
+    %% Estilos (Opcional, para que se vea azul como en tu foto)
+    style ProductsAPI fill:#1e3a8a,stroke:#000,color:#fff
+    style UsersAPI fill:#1e3a8a,stroke:#000,color:#fff
+    style OrdersAPI fill:#1e3a8a,stroke:#000,color:#fff
+    style CartAPI fill:#1e3a8a,stroke:#000,color:#fff
+    style NotificationsAPI fill:#1e3a8a,stroke:#000,color:#fff
+    style Client fill:#fcd34d,stroke:#b45309,color:#000
+    style DB1 fill:#fef3c7,stroke:#000
+    style DB2 fill:#fef3c7,stroke:#000
+    style DB3 fill:#fef3c7,stroke:#000
+    style DB4 fill:#fef3c7,stroke:#000
+    style DB5 fill:#fef3c7,stroke:#000
