@@ -47,6 +47,12 @@ public class OrderService : IOrderService
             throw new ValidationException("ORD-002", "Los datos de la orden son inválidos. La lista de items está vacía.");
         }
 
+        // Validar que ninguna cantidad sea menor o igual a cero
+        if (request.Items.Any(item => item.Cantidad <= 0))
+        {
+            throw new ValidationException("ORD-002", "Los datos de la orden son inválidos. La cantidad de los productos debe ser mayor a cero.");
+        }
+
         // ====================================================================
         // 1. LLAMADA A USERS API (Validar usuario - ORD-003)
         // ====================================================================
