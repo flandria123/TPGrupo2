@@ -77,49 +77,51 @@ graph TD
 
     %% Definición de los Microservicios
     subgraph Arquitectura de Microservicios UBA
-        %% Fila Superior (Microservicios que dependen de otros)
+        %% Fila Superior
         OrdersAPI["Orders.API\nPuerto: 7003"]
         CartAPI["Cart.API\nPuerto: 7004"]
-        NotificationsAPI["Notifications.API\nPuerto: 7005"]
         
-        %% Fila Inferior (Microservicios base, no dependen de otros)
-        UsersAPI["Users.API\nPuerto: 7002"]
+        %% Fila Inferior
         ProductsAPI["Products.API\nPuerto: 7001"]
+        UsersAPI["Users.API\nPuerto: 7002"]
+        NotificationsAPI["Notifications.API\nPuerto: 7005"]
     end
 
     %% Peticiones HTTP del Cliente a los Microservicios
+    %% Flechas cortas para la primera fila
     Client -->|HTTP| OrdersAPI
     Client -->|HTTP| CartAPI
-    Client -->|HTTP| NotificationsAPI
     
-    Client --->|HTTP| UsersAPI
+    %% Flechas largas para forzar que bajen a la segunda fila
     Client --->|HTTP| ProductsAPI
+    Client --->|HTTP| UsersAPI
+    Client --->|HTTP| NotificationsAPI
 
     %% Comunicación interna entre Microservicios (Validaciones cruzadas)
     OrdersAPI -.->|Consulta Stock| ProductsAPI
     OrdersAPI -.->|Valida Usuario| UsersAPI
     CartAPI -.->|Consulta Stock| ProductsAPI
     
-    %% LA NUEVA FLECHA: Notificaciones validando al usuario (NTF-001)
+    %% NUEVA FLECHA HORIZONTAL: Notificaciones validando al usuario
     NotificationsAPI -.->|Valida Usuario| UsersAPI
     
     %% Bases de Datos
     subgraph Bases de Datos SQLite Local
         DB_O[("app.db")]
         DB_C[("app.db")]
-        DB_N[("app.db")]
-        DB_U[("app.db")]
         DB_P[("app.db")]
+        DB_U[("app.db")]
+        DB_N[("app.db")]
     end
 
     %% Conexión a DBs
     OrdersAPI --- DB_O
     CartAPI --- DB_C
-    NotificationsAPI --- DB_N
-    UsersAPI --- DB_U
     ProductsAPI --- DB_P
+    UsersAPI --- DB_U
+    NotificationsAPI --- DB_N
 
-    %% Estilos 
+    %% Estilos (Basado en la foto original de la cátedra)
     style ProductsAPI fill:#1e3a8a,stroke:#000,color:#fff
     style UsersAPI fill:#1e3a8a,stroke:#000,color:#fff
     style OrdersAPI fill:#1e3a8a,stroke:#000,color:#fff
@@ -128,6 +130,6 @@ graph TD
     style Client fill:#fcd34d,stroke:#b45309,color:#000
     style DB_O fill:#fef3c7,stroke:#000
     style DB_C fill:#fef3c7,stroke:#000
-    style DB_N fill:#fef3c7,stroke:#000
-    style DB_U fill:#fef3c7,stroke:#000
     style DB_P fill:#fef3c7,stroke:#000
+    style DB_U fill:#fef3c7,stroke:#000
+    style DB_N fill:#fef3c7,stroke:#000
