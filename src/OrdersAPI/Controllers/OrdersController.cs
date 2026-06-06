@@ -65,44 +65,48 @@ namespace OrdersAPI.Controllers
             return Ok(order);
         }
 
-        /// <summary>
-        /// Crea una nueva orden de compra en el sistema y calcula su total automáticamente.
-        /// </summary>
-        /// <remarks>
-        /// Ejemplo de solicitud exitosa:
-        /// 
-        ///     POST /api/orders
-        ///     {
-        ///        "usuarioId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        ///        "items": [
-        ///           {
-        ///              "productoId": "b0a23b45-1234-4567-abcd-123456789abc",
-        ///              "cantidad": 2
-        ///           }
-        ///        ]
-        ///     }
-        /// 
-        /// Ejemplo de respuesta de error (Stock insuficiente):
-        /// 
-        ///     {
-        ///        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-        ///        "title": "Business Rule Violation",
-        ///        "status": 400,
-        ///        "detail": "Se ha producido un error de validación en la regla de negocio.",
-        ///        "instance": "/api/orders",
-        ///        "errorCode": "ORD-005",
-        ///        "errorMessage": "Stock insuficiente para el producto seleccionado."
-        ///     }
-        /// 
-        /// </remarks>
-        /// <param name="request">Datos requeridos para la creación del pedido (Usuario e Ítems).</param>
-        /// <response code="201">Orden creada con éxito.</response>
-        /// <response code="400">Datos inválidos (ORD-002), usuario inexistente (ORD-003), producto inexistente (ORD-004) o stock insuficiente (ORD-005).</response>
-        /// <response code="500">Error interno al procesar la orden.</response>
-        [HttpPost]
-        [ProducesResponseType(typeof(Order), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+            /// <summary>
+    /// Crea una nueva orden de compra en el sistema y calcula su total automáticamente.
+    /// </summary>
+    /// <remarks>
+    /// Ejemplo de solicitud exitosa:
+    /// 
+    ///     POST /api/orders
+    ///     {
+    ///        "usuarioId": "a1b2c3d4-0000-0000-0000-111122223333",
+    ///        "items": [
+    ///           {
+    ///              "productoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    ///              "cantidad": 2
+    ///           }
+    ///        ]
+    ///     }
+    /// 
+    /// Ejemplo de respuesta de error (Stock insuficiente):
+    /// 
+    ///     {
+    ///        "type": "https://tools.ietf.org/html/rfc4918#section-11.2",
+    ///        "title": "Unprocessable Entity",
+    ///        "status": 422,
+    ///        "detail": "No se puede procesar la solicitud.",
+    ///        "instance": "/api/orders",
+    ///        "errorCode": "ORD-005",
+    ///        "errorMessage": "Stock insuficiente para 'Notebook Dell XPS 15'. Disponible: 2, solicitado: 5."
+    ///     }
+    /// 
+    /// </remarks>
+    /// <param name="request">Datos requeridos para la creación del pedido (Usuario e Ítems).</param>
+    /// <response code="201">Orden creada con éxito.</response>
+    /// <response code="400">Los datos de la orden son inválidos (ORD-002).</response>
+    /// <response code="404">Usuario no encontrado (ORD-003) o Producto no encontrado (ORD-004).</response>
+    /// <response code="422">Stock insuficiente para uno o más productos (ORD-005).</response>
+    /// <response code="500">Error interno al procesar la orden (ORD-007).</response>
+    [HttpPost]
+    [ProducesResponseType(typeof(Order), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
         {
             var response = await _orderService.CreateOrderAsync(request);
