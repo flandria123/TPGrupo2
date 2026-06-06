@@ -2,6 +2,11 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using OrdersAPI.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
 
 namespace OrdersAPI.Data
 {
@@ -31,8 +36,8 @@ namespace OrdersAPI.Data
 
             sql += " ORDER BY fecha_creacion DESC";
 
-            // Listamos las cabeceras
-            var orders = (await conn.QueryAsync<Order>(sql, new { UsuarioId = usuarioId })).ToList();
+            // CORRECCIÓN APLICADA: Se usa usuarioId?.ToString() para que Dapper envíe un string
+            var orders = (await conn.QueryAsync<Order>(sql, new { UsuarioId = usuarioId?.ToString() })).ToList();
 
             // Para cada orden, buscamos sus items (idealmente se hace con un JOIN, 
             // pero esto mantiene la simplicidad del código de los profesores)
@@ -49,11 +54,12 @@ namespace OrdersAPI.Data
         {
             using var conn = CreateConnection();
 
+            // CORRECCIÓN APLICADA: Se usa id.ToString() en el parámetro
             var order = await conn.QuerySingleOrDefaultAsync<Order>(@"
                 SELECT id AS Id, usuario_id AS UsuarioId, total AS Total, 
                        estado AS Estado, fecha_creacion AS FechaCreacion
                 FROM orders
-                WHERE id = @Id", new { Id = id });
+                WHERE id = @Id", new { Id = id.ToString() });
 
             if (order != null)
             {
