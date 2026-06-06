@@ -23,6 +23,7 @@ namespace CartAPI.Services
         // ── 1. OBTENER CARRITO (GET) ──
         public async Task<CartResponse> GetCartAsync(Guid usuarioId)
         {
+            
             _logger.LogInformation("Buscando carrito para el usuario {UserId}", usuarioId);
 
             var cart = await _cartRepository.GetCartByUserIdAsync(usuarioId);
@@ -44,25 +45,42 @@ namespace CartAPI.Services
             _logger.LogInformation("Intentando agregar {Cantidad} unidades del producto {ProductoId} al carrito {UserId}",
                 request.Cantidad, request.ProductoId, usuarioId);
 
+            // 1. VALIDACIÓN CRT-004: Cantidad inválida (Red de seguridad en capa de dominio) 
+            if (request.Cantidad <= 0)
+            {
+                _logger.LogWarning("Intento de agregar cantidad inválida ({Cantidad}) para el producto {ProductoId}",
+                    request.Cantidad, request.ProductoId);
+                throw new BusinessRuleException("CRT-004", "La cantidad debe ser mayor a cero.");
+            }
+
+            // 2. Buscamos el carrito actual o creamos uno nuevo en memoria si es su primera compra
             var cart = await _cartRepository.GetCartByUserIdAsync(usuarioId)
                        ?? new CartAPI.Models.Cart { UsuarioId = usuarioId, Items = new() };
 
             var itemExistente = cart.Items.FirstOrDefault(i => i.ProductoId == request.ProductoId);
             int cantidadActualEnCarrito = itemExistente?.Cantidad ?? 0;
 
-            // Validamos que exista y tenga stock en Products.API
+            // 3. VALIDACIÓN CRT-002 y CRT-003: Validamos existencia y stock en Products.API 
             await ValidateProductStockAsync(request.ProductoId, request.Cantidad, cantidadActualEnCarrito);
 
+            // 4. Lógica de negocio: Sumamos si ya existe, agregamos a la lista si es nuevo
             if (itemExistente != null)
             {
                 itemExistente.Cantidad += request.Cantidad;
             }
             else
             {
-                cart.Items.Add(new CartAPI.Models.CartItem { ProductoId = request.ProductoId, Cantidad = request.Cantidad });
+                cart.Items.Add(new CartAPI.Models.CartItem
+                {
+                    ProductoId = request.ProductoId,
+                    Cantidad = request.Cantidad
+                });
             }
 
+            // 5. Actualizamos el timestamp exigido por el modelo de datos 
             cart.FechaActualizacion = DateTime.UtcNow;
+
+            // 6. Guardamos los cambios físicos en el archivo app.db
             await _cartRepository.CreateOrUpdateCartAsync(cart);
 
             _logger.LogInformation("Producto {ProductoId} agregado exitosamente. Total en carrito: {TotalItem}",
@@ -170,7 +188,9 @@ namespace CartAPI.Services
         private async Task<ProductExternalResponse> ValidateProductStockAsync(Guid productoId, int requestedQuantity, int currentCartQuantity)
         {
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync($"https://localhost:7001/api/products/{productoId}");
+
+            // CORRECCIÓN: Forzamos el ID a minúsculas en la URL para evitar el 404 fantasma
+            var response = await client.GetAsync($"https://localhost:7001/api/products/{productoId.ToString().ToLower()}");
 
             // VALIDACIÓN CRT-002: Producto inexistente en Products.API
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)

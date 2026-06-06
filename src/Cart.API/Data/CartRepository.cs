@@ -17,12 +17,15 @@ public class CartRepository
     public async Task<CartAPI.Models.Cart?> GetCartByUserIdAsync(Guid userId)
     {
         using var conn = CreateConnection();
+       
         var sql = """
-            SELECT c.UsuarioId, c.FechaActualizacion, 
-                   ci.ProductoId, ci.Cantidad 
-            FROM Carts c
-            LEFT JOIN CartItems ci ON c.UsuarioId = ci.UsuarioId
-            WHERE c.UsuarioId = @UserId
+            SELECT c.usuario_id AS UsuarioId, 
+                   c.fecha_actualizacion AS FechaActualizacion, 
+                   ci.producto_id AS ProductoId, 
+                   ci.cantidad AS Cantidad 
+            FROM carts c
+            LEFT JOIN cart_items ci ON c.usuario_id = ci.usuario_id
+            WHERE c.usuario_id = @UserId
         """;
 
         var cartDictionary = new Dictionary<Guid, CartAPI.Models.Cart>();
@@ -45,8 +48,8 @@ public class CartRepository
                 }
                 return currentCart;
             },
-            new { UserId = userId },
-            null, true, "ProductoId"
+            new { UserId = userId.ToString().ToLower() },
+            null, true, "ProductoId" 
         );
 
         return cartDictionary.Values.FirstOrDefault();
@@ -62,31 +65,38 @@ public class CartRepository
         try
         {
             var sqlCart = """
-                INSERT INTO Carts (UsuarioId, FechaActualizacion) 
+                INSERT INTO carts (usuario_id, fecha_actualizacion) 
                 VALUES (@UsuarioId, @FechaActualizacion)
-                ON CONFLICT(UsuarioId) DO UPDATE SET 
-                FechaActualizacion = excluded.FechaActualizacion
+                ON CONFLICT(usuario_id) DO UPDATE SET 
+                fecha_actualizacion = excluded.fecha_actualizacion
             """;
 
-            await conn.ExecuteAsync(sqlCart, new { cart.UsuarioId, cart.FechaActualizacion }, transaction);
+            // CORRECCIÓN 1: Forzamos el ID de usuario a minúscula
+            await conn.ExecuteAsync(sqlCart, new
+            {
+                UsuarioId = cart.UsuarioId.ToString().ToLower(),
+                cart.FechaActualizacion
+            }, transaction);
 
+            // CORRECCIÓN 2: Forzamos el ID de usuario a minúscula en el DELETE
             await conn.ExecuteAsync(
-                "DELETE FROM CartItems WHERE UsuarioId = @UsuarioId",
-                new { cart.UsuarioId }, transaction);
+                "DELETE FROM cart_items WHERE usuario_id = @UsuarioId",
+                new { UsuarioId = cart.UsuarioId.ToString().ToLower() }, transaction);
 
             if (cart.Items != null)
             {
                 var sqlItems = """
-                    INSERT INTO CartItems (UsuarioId, ProductoId, Cantidad)
+                    INSERT INTO cart_items (usuario_id, producto_id, cantidad)
                     VALUES (@UsuarioId, @ProductoId, @Cantidad)
                 """;
 
                 foreach (var item in cart.Items)
                 {
+                    // CORRECCIÓN 3: Forzamos ambos IDs a minúscula en el INSERT de ítems
                     await conn.ExecuteAsync(sqlItems, new
                     {
-                        cart.UsuarioId,
-                        item.ProductoId,
+                        UsuarioId = cart.UsuarioId.ToString().ToLower(),
+                        ProductoId = item.ProductoId.ToString().ToLower(),
                         item.Cantidad
                     }, transaction);
                 }
@@ -109,15 +119,17 @@ public class CartRepository
 
         try
         {
+            // CORRECCIÓN: Usamos cart_items y usuario_id
             await conn.ExecuteAsync(
-                "DELETE FROM CartItems WHERE UsuarioId = @UserId",
-                new { UserId = userId },
-                transaction); // <-- Agregamos la transacción
+                "DELETE FROM cart_items WHERE usuario_id = @UserId",
+                new { UserId = userId.ToString().ToLower() },
+                transaction);
 
+            // CORRECCIÓN: Usamos carts y usuario_id
             await conn.ExecuteAsync(
-                "DELETE FROM Carts WHERE UsuarioId = @UserId",
-                new { UserId = userId },
-                transaction); // <-- Agregamos la transacción
+                "DELETE FROM carts WHERE usuario_id = @UserId",
+                new { UserId = userId.ToString().ToLower() },
+                transaction);
 
             transaction.Commit();
         }
