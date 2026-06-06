@@ -77,42 +77,47 @@ graph TD
 
     %% Definición de los Microservicios
     subgraph Arquitectura de Microservicios UBA
-        ProductsAPI["Products.API\nPuerto: 7001"]
-        UsersAPI["Users.API\nPuerto: 7002"]
+        %% Fila Superior (Nivel 1)
         OrdersAPI["Orders.API\nPuerto: 7003"]
         CartAPI["Cart.API\nPuerto: 7004"]
+        
+        %% Fila Inferior (Nivel 2)
+        UsersAPI["Users.API\nPuerto: 7002"]
+        ProductsAPI["Products.API\nPuerto: 7001"]
         NotificationsAPI["Notifications.API\nPuerto: 7005"]
     end
 
     %% Peticiones HTTP del Cliente a los Microservicios
-    Client -->|HTTP| ProductsAPI
-    Client -->|HTTP| UsersAPI
+    %% Usamos "-->" (corto) para forzar que Orders y Cart queden arriba
     Client -->|HTTP| OrdersAPI
     Client -->|HTTP| CartAPI
-    Client -->|HTTP| NotificationsAPI
+    
+    %% Usamos "--->" (largo) para forzar que el resto baje un escalón
+    Client --->|HTTP| UsersAPI
+    Client --->|HTTP| ProductsAPI
+    Client --->|HTTP| NotificationsAPI
 
     %% Comunicación interna entre Microservicios (Validaciones cruzadas)
+    %% Ahora las flechas bajarán limpiamente sin atravesar a Orders
     OrdersAPI -.->|Consulta Stock| ProductsAPI
     OrdersAPI -.->|Valida Usuario| UsersAPI
     CartAPI -.->|Consulta Stock| ProductsAPI
     
-    %% NOTA: No hay conexión entre Cart.API y Orders.API
-
     %% Bases de Datos
     subgraph Bases de Datos SQLite Local
-        DB1[("app.db")]
-        DB2[("app.db")]
-        DB3[("app.db")]
-        DB4[("app.db")]
-        DB5[("app.db")]
+        DB_O[("app.db")]
+        DB_C[("app.db")]
+        DB_U[("app.db")]
+        DB_P[("app.db")]
+        DB_N[("app.db")]
     end
 
     %% Conexión a DBs
-    ProductsAPI --- DB1
-    UsersAPI --- DB2
-    OrdersAPI --- DB3
-    CartAPI --- DB4
-    NotificationsAPI --- DB5
+    OrdersAPI --- DB_O
+    CartAPI --- DB_C
+    UsersAPI --- DB_U
+    ProductsAPI --- DB_P
+    NotificationsAPI --- DB_N
 
     %% Estilos (Opcional, para que se vea azul como en tu foto)
     style ProductsAPI fill:#1e3a8a,stroke:#000,color:#fff
@@ -121,8 +126,8 @@ graph TD
     style CartAPI fill:#1e3a8a,stroke:#000,color:#fff
     style NotificationsAPI fill:#1e3a8a,stroke:#000,color:#fff
     style Client fill:#fcd34d,stroke:#b45309,color:#000
-    style DB1 fill:#fef3c7,stroke:#000
-    style DB2 fill:#fef3c7,stroke:#000
-    style DB3 fill:#fef3c7,stroke:#000
-    style DB4 fill:#fef3c7,stroke:#000
-    style DB5 fill:#fef3c7,stroke:#000
+    style DB_O fill:#fef3c7,stroke:#000
+    style DB_C fill:#fef3c7,stroke:#000
+    style DB_U fill:#fef3c7,stroke:#000
+    style DB_P fill:#fef3c7,stroke:#000
+    style DB_N fill:#fef3c7,stroke:#000
