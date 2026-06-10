@@ -133,19 +133,22 @@ graph TD
     style DB_P fill:#fef3c7,stroke:#000
     style DB_U fill:#fef3c7,stroke:#000
     style DB_N fill:#fef3c7,stroke:#000
+```
+
 ---
 
-## Documentación de Errores (Swagger UI)
-A continuación se detallan las capturas de pantalla de las respuestas de error estructuradas con código y mensaje, tal como lo exige el catálogo del dominio [cite: 3].
+## 3. Documentación de Errores (Swagger UI)
+A continuación se detallan las capturas de pantalla de las respuestas de error estructuradas con código y mensaje, tal como lo exige el catálogo del dominio [cite: 3, 38].
 
 ### Products API
+
 **Error PRD-001 (Producto no encontrado):**
-![Error PRD-001](./docs/ProductsAPI/Get{Id}_PRD001.png)
+![Error PRD-001](./docs/ProductsAPI/GetId_PRD001.png)
 
 **Error PRD-002 (Los datos del producto son inválidos.):**
 ![Error PRD-002](./docs/ProductsAPI/Post_PRD002.png)
 
-**Error PRD-003 (Ya existe un producto con es nombre en la categoría. ):**
+**Error PRD-003 (Ya existe un producto con ese nombre en la categoría.):**
 ![Error PRD-003](./docs/ProductsAPI/PRD003.png)
 
 **Error PRD-004 (El producto tiene órdenes activas y no puede eliminarse.):**
@@ -155,16 +158,17 @@ A continuación se detallan las capturas de pantalla de las respuestas de error 
 ![Error PRD-005](./docs/ProductsAPI/PRD005.png)
 
 ### Users API
+
 **Error USR-001 (Email duplicado):**
 ![Error USR-001](./docs/UsersAPI/USR001.png)
 
-**Error USR-002 (Los datos del usuario son inválidos. ):**
+**Error USR-002 (Los datos del usuario son inválidos.):**
 ![Error USR-002](./docs/UsersAPI/Login_USR002.png)
 
 **Error USR-003 (Credenciales incorrectas.):**
 ![Error USR-003](./docs/UsersAPI/USR003.png)
 
-**Error USR-004 (Usuario bloqueado por demasiados intentos fallidos.:**
+**Error USR-004 (Usuario bloqueado por demasiados intentos fallidos):**
 ![Error USR-004](./docs/UsersAPI/USR004.png)
 
 **Error USR-005 (Usuario bloqueado por detección de fraude.):**
@@ -174,6 +178,7 @@ A continuación se detallan las capturas de pantalla de las respuestas de error 
 ![Error USR-006](./docs/UsersAPI/USR006.png)
 
 ### Orders API
+
 **Error ORD-001 (Orden no encontrada.):**
 ![Error ORD-001](./docs/OrdersAPI/ORD001.png)
 
