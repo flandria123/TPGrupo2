@@ -21,31 +21,69 @@ namespace Users.API.Controllers
             _userService = userService;
         }
 
-        
+
         /// <summary>
         /// Obtiene un usuario por ID. Utilizado principalmente para validación entre microservicios.
         /// </summary>
+        /// <remarks>
+        /// Este endpoint es utilizado internamente por otros microservicios (como Orders.API) para validar la existencia de un usuario antes de crear una orden.
+        /// 
+        /// Ejemplo de respuesta exitosa (200 OK):
+        /// 
+        ///     GET /api/users/a1b2c3d4-0000-0000-0000-111122223333
+        ///     {
+        ///       "id": "a1b2c3d4-0000-0000-0000-111122223333",
+        ///       "nombre": "María",
+        ///       "apellido": "González",
+        ///       "email": "maria@email.com",
+        ///       "fechaRegistro": "2024-03-10T09:00:00Z",
+        ///       "activo": true
+        ///     }
+        /// 
+        /// Ejemplo de respuesta de error (404 Not Found):
+        /// 
+        ///     {
+        ///       "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+        ///       "title": "Not Found",
+        ///       "status": 404,
+        ///       "detail": "El recurso solicitado no fue encontrado.",
+        ///       "instance": "/api/users/a1b2c3d4-0000-0000-0000-111122223333"
+        ///     }
+        /// </remarks>
+        /// <param name="id">El identificador único del usuario (GUID).</param>
+        /// <response code="200">Usuario obtenido con éxito (No incluye PasswordHash).</response>
+        /// <response code="404">El usuario no existe en la base de datos.</response>
+        /// <response code="500">Error interno al procesar la solicitud (ErrorCode: USR-006).</response>
         [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetById(Guid id)
+        [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<UserResponse>> GetById(Guid id)
         {
-            // OJO: Asegúrate de tener este método en tu IUserService
             var user = await _userService.GetByIdAsync(id);
 
             if (user == null)
             {
-                return NotFound();
+                
+                return NotFound(new ProblemDetails
+                {
+                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+                    Status = 404,
+                    Title = "Not Found",
+                    Detail = "El recurso solicitado no fue encontrado.",
+                    Instance = HttpContext.Request.Path
+                });
             }
 
             return Ok(user);
         }
 
-        
+
         /// <summary>
         /// Registra un nuevo usuario en el sistema.
         /// </summary>
         /// <remarks>
+        /// 
         /// Ejemplo de solicitud exitosa:
         /// 
         ///     POST /api/users/register
@@ -80,10 +118,10 @@ namespace Users.API.Controllers
         /// 
         /// </remarks>
         /// <param name="request">Datos del usuario (Nombre, Apellido, Email, Password).</param>
-        /// <response code="201">Usuario creado con éxito. El campo PasswordHash no se incluye en la respuesta [1].</response>
-        /// <response code="400">Los datos del usuario son inválidos (USR-002) [1].</response>
-        /// <response code="409">El email ya está registrado (USR-001) [1, 2].</response>
-        /// <response code="500">Error interno al procesar el usuario (USR-006) [3].</response>
+        /// <response code="201">Usuario creado con éxito. El campo PasswordHash no se incluye en la respuesta.</response>
+        /// <response code="400">Los datos del usuario son inválidos (USR-002).</response>
+        /// <response code="409">El email ya está registrado (USR-001).</response>
+        /// <response code="500">Error interno al procesar el usuario (USR-006).</response>
         [HttpPost("register")]
         [ProducesResponseType(typeof(UserResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -97,11 +135,12 @@ namespace Users.API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
         }
 
-        
+
         /// <summary>
         /// Autentica a un usuario y maneja la regla de bloqueo de 3 intentos.
         /// </summary>
         /// <remarks>
+        /// 
         /// Ejemplo de solicitud exitosa:
         /// 
         ///     POST /api/users/login
@@ -110,17 +149,16 @@ namespace Users.API.Controllers
         ///        "password": "MiPassword123!"
         ///     }
         /// 
-        /// Ejemplo de respuesta de error (Usuario bloqueado):
+        /// Ejemplo de respuesta exitosa (200 OK):
         /// 
         ///     {
-        ///        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
-        ///        "title": "Forbidden",
-        ///        "status": 403,
-        ///        "errorCode": "USR-004",
-        ///        "errorMessage": "Su cuenta fue bloqueada por superar el máximo de intentos fallidos."
+        ///       "id": "a1b2c3d4-0000-0000-0000-111122223333",
+        ///       "nombre": "María",
+        ///       "apellido": "González",
+        ///       "email": "maria@email.com"
         ///     }
-        ///     
-        ///  Ejemplo de respuesta de error (Credenciales incorrectas):
+        /// 
+        /// Ejemplo de respuesta de error (Credenciales incorrectas):
         /// 
         ///     {
         ///        "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
@@ -131,8 +169,20 @@ namespace Users.API.Controllers
         ///        "errorCode": "USR-003",
         ///        "errorMessage": "Credenciales incorrectas."
         ///     }
+        /// 
+        /// Ejemplo de respuesta de error (Usuario bloqueado por intentos):
+        /// 
+        ///     {
+        ///        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+        ///        "title": "Forbidden",
+        ///        "status": 403,
+        ///        "detail": "El acceso está prohibido.",
+        ///        "instance": "/api/users/login",
+        ///        "errorCode": "USR-004",
+        ///        "errorMessage": "Su cuenta fue bloqueada por superar el máximo de intentos fallidos. Contacte a soporte."
+        ///     }
         ///     
-        ///  Ejemplo de respuesta de error (Bloqueo por seguridad):
+        /// Ejemplo de respuesta de error (Bloqueo por seguridad):
         /// 
         ///     {
         ///        "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
@@ -143,13 +193,12 @@ namespace Users.API.Controllers
         ///        "errorCode": "USR-005",
         ///        "errorMessage": "Su cuenta fue suspendida por razones de seguridad. Contacte a soporte."
         ///     }
-        /// 
         /// </remarks>
         /// <response code="200">Login exitoso.</response>
-        /// <response code="400">Los datos de la petición son inválidos (USR-002) [1].</response>
-        /// <response code="401">Credenciales incorrectas (USR-003) [3, 4].</response>
-        /// <response code="403">Usuario bloqueado por intentos (USR-004) o seguridad (USR-005) [3, 5].</response>
-        /// <response code="500">Error interno al procesar el usuario (USR-006) [3].</response>
+        /// <response code="400">Los datos de la petición son inválidos (USR-002).</response>
+        /// <response code="401">Credenciales incorrectas (USR-003).</response>
+        /// <response code="403">Usuario bloqueado por intentos (USR-004) o seguridad (USR-005).</response>
+        /// <response code="500">Error interno al procesar el usuario (USR-006).</response>
         [HttpPost("login")]
         [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

@@ -37,14 +37,15 @@ namespace Users.API.Services
             }
 
             // Mapeamos a UserResponse (sin exponer el PasswordHash)
-            return new UserResponse(
-              user.Id,
-              user.Nombre,
-              user.Apellido,
-              user.Email,
-              user.FechaRegistro,
-              user.Activo
-            );
+            return new UserResponse
+            {
+                Id = user.Id,
+                Nombre = user.Nombre,
+                Apellido = user.Apellido,
+                Email = user.Email,
+                FechaRegistro = user.FechaRegistro,
+                Activo = user.Activo
+            };
         }
 
 
@@ -131,17 +132,16 @@ namespace Users.API.Services
 
             if (!user.Activo)
             {
-                // Diferenciar por qué está bloqueado según el catálogo [13-15]
+                // Diferenciar por qué está bloqueado según el catálogo
                 if (user.IntentosFallidos >= 3)
                 {
-                    _logger.LogWarning(
-                   "Intento de acceso a cuenta bloqueada: {Email}",
-                   user.Email);
-                    throw new BusinessRuleException("USR-004", "Su cuenta fue bloqueada por superar el máximo de intentos fallidos.");
-                                        
+                    _logger.LogWarning("Intento de acceso a cuenta bloqueada por intentos: {Email}. [USR-004]", user.Email);
+                    
+                    throw new BusinessRuleException("USR-004", "Su cuenta fue bloqueada por superar el máximo de intentos fallidos. Contacte a soporte.");
                 }
-                _logger.LogWarning("Intento de acceso a cuenta suspendida manualmente: {Email}. [USR-005]", user.Email);
-                throw new BusinessRuleException("USR-005", "Su cuenta fue suspendida por razones de seguridad.");
+
+                _logger.LogWarning("Intento de acceso a cuenta suspendida por seguridad: {Email}. [USR-005]", user.Email);
+                throw new BusinessRuleException("USR-005", "Su cuenta fue suspendida por razones de seguridad. Contacte a soporte.");
             }
 
 
@@ -187,7 +187,15 @@ namespace Users.API.Services
             }
         }
 
-        private UserResponse MapToResponse(User entity) => new(entity.Id, entity.Nombre, entity.Apellido, entity.Email, entity.FechaRegistro, entity.Activo);
+        private UserResponse MapToResponse(User entity) => new UserResponse
+        {
+            Id = entity.Id,
+            Nombre = entity.Nombre,
+            Apellido = entity.Apellido,
+            Email = entity.Email,
+            FechaRegistro = entity.FechaRegistro,
+            Activo = entity.Activo
+        };
 
     }
 }
