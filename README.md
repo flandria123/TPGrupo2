@@ -104,6 +104,12 @@ graph TD
     
     %% NUEVA FLECHA HORIZONTAL: Notificaciones validando al usuario
     NotificationsAPI -.->|Valida Usuario| UsersAPI
+
+    %% NUEVA FLECHA HORIZONTAL: Notificaciones validando al usuario
+    NotificationsAPI -.->|Valida Usuario| UsersAPI
+    
+    %% VALIDACIÓN DE ELIMINACIÓN DE PRODUCTO (PRD-004)
+    ProductsAPI -.->|Verifica Órdenes Activas| OrdersAPI
     
     %% Bases de Datos
     subgraph Bases de Datos SQLite Local
