@@ -13,9 +13,12 @@ public static class ServicesExtensions
                        
          services.AddScoped<DatabaseInitializer>();
 
-         services.AddHttpClient();
+        services.AddHttpClient("OrdersAPI", client =>
+        {
+            client.BaseAddress = new Uri("https://localhost:7003");
+        });
 
-         services.AddScoped<ProductRepository>();
+        services.AddScoped<ProductRepository>();
          services.AddScoped<IProductService, ProductService>();
 
          services.AddControllers()
