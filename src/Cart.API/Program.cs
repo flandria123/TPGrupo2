@@ -25,9 +25,7 @@ public partial class Program
         // 2. Servicios de la aplicación 
         builder.Services.AddAppServices();
 
-        // Agregar Swagger 
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        
 
 
         var app = builder.Build();

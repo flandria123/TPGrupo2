@@ -219,15 +219,22 @@ namespace CartAPI.Services
 
         private CartResponse MapToResponse(CartAPI.Models.Cart cart)
         {
+            
             var itemsResponse = cart.Items.Select(i =>
-                new CartItemResponse(i.ProductoId, i.Cantidad)
+                new CartItemResponse
+                {
+                    ProductoId = i.ProductoId,
+                    Cantidad = i.Cantidad
+                }
             ).ToList();
 
-            return new CartResponse(
-                cart.UsuarioId,
-                itemsResponse,
-                cart.FechaActualizacion
-            );
+            
+            return new CartResponse
+            {
+                UsuarioId = cart.UsuarioId,
+                Items = itemsResponse,
+                FechaActualizacion = cart.FechaActualizacion
+            };
         }
     }
 }
