@@ -30,9 +30,11 @@ namespace NotificationsAPI.ExceptionHandlers
             {
                 type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
                 title = "Internal Server Error",
-                status = statusCode,
-                detail = "Ocurrió un error interno inesperado.",
+                status = statusCode, // (O 500 directamente)
+                detail = "Ocurrió un error inesperado en el servidor.",
                 instance = context.Request.Path.Value,
+                errorCode = "NTF-004", // <-- EL CÓDIGO EXACTO DE NOTIFICATIONS
+                errorMessage = "Error interno al procesar la notificación.",
 
                 // CorrelationId para trazabilidad distribuida
                 correlationId = context.Items["CorrelationId"]?.ToString()
