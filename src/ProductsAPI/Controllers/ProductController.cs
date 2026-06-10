@@ -189,6 +189,18 @@ public class ProductsController : ControllerBase
     ///       "fechaCreacion": "2024-01-15T10:30:00Z"
     ///     }
     /// 
+    /// Ejemplo de respuesta de error (Datos inválidos - PRD-002):
+    /// 
+    ///     {
+    ///       "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+    ///       "title": "Bad Request",
+    ///       "status": 400,
+    ///       "detail": "No se puede procesar la solicitud.",
+    ///       "instance": "/api/products/3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    ///       "errorCode": "PRD-002",
+    ///       "errorMessage": "Los datos del producto son inválidos."
+    ///     }
+    ///     
     /// Ejemplo de respuesta de error (Producto no encontrado):
     /// 
     ///     {
@@ -227,6 +239,18 @@ public class ProductsController : ControllerBase
     ///     DELETE /api/products/3fa85f64-5717-4562-b3fc-2c963f66afa6
     ///     (Devuelve un 204 No Content sin cuerpo en la respuesta)
     /// 
+    /// Ejemplo de respuesta de error (Producto no encontrado - PRD-001):
+    /// 
+    ///     {
+    ///       "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+    ///       "title": "Not Found",
+    ///       "status": 404,
+    ///       "detail": "El recurso solicitado no fue encontrado.",
+    ///       "instance": "/api/products/3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    ///       "errorCode": "PRD-001",
+    ///       "errorMessage": "Producto no encontrado."
+    ///     }
+    ///     
     /// Ejemplo de respuesta de error (Producto con órdenes activas):
     /// 
     ///     {
