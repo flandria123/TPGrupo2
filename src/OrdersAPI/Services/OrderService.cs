@@ -163,6 +163,29 @@ public class OrderService : IOrderService
         return order;
     }
 
+    public async Task<IEnumerable<OrderResponse>> GetOrdersByProductIdAsync(Guid productoId)
+    {
+        _logger.LogInformation("Consultando órdenes internas asociadas al producto {ProductoId}", productoId);
+
+        // 1. Buscamos en la base de datos
+        var ordenes = await _repository.GetByProductIdAsync(productoId);
+
+        // 2. Mapeamos TODOS los campos obligatorios para satisfacer a C#
+        return ordenes.Select(o => new OrderResponse
+        {
+            Id = o.Id,
+            UsuarioId = o.UsuarioId,
+            Total = o.Total,
+            Estado = o.Estado, // ¡Este sigue siendo el campo vital para PRD-004!
+            FechaCreacion = o.FechaCreacion,
+
+            // Como a Products.API solo le importa el Estado, podemos enviar la lista de Items vacía 
+            // para no hacer otra consulta extra a la base de datos y optimizar el rendimiento.
+            Items = [] 
+        }).ToList();
+    }
+
+
     private OrderResponse MapToResponse(Order order)
     {
         return new OrderResponse

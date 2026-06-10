@@ -12,7 +12,7 @@ public interface IOrderService
 
 
 
-   
+    Task<IEnumerable<OrderResponse>> GetOrdersByProductIdAsync(Guid productoId);
     Task<UpdateStatusResponse> UpdateStatusAsync(Guid id, string estado);
 
 
