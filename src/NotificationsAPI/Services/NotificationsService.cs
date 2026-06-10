@@ -27,7 +27,21 @@ public class NotificationsService : INotificationsService
         // LOG DE INFORMACIÓN: Inicio del proceso (útil para auditoría)
         _logger.LogInformation("Iniciando registro y simulación de notificación para el usuario {UsuarioId}", request.UsuarioId);
 
-        // 1. Validar existencia del usuario en la Users.API (Requerimiento 5.5)
+        // 1. VALIDACIÓN DE NEGOCIO: Campos obligatorios y tipo reconocido (NTF-002)
+        if (string.IsNullOrWhiteSpace(request.Tipo) ||
+           (request.Tipo != "Email" && request.Tipo != "Push" && request.Tipo != "SMS"))
+        {
+            _logger.LogWarning("Validación fallida: El tipo de notificación '{Tipo}' es inválido o está vacío. Error NTF-002.", request.Tipo);
+            throw new ValidationException("NTF-002", "Los datos de la notificación son inválidos. El tipo no puede estar vacío y debe ser 'Email', 'Push' o 'SMS'.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Mensaje))
+        {
+            _logger.LogWarning("Validación fallida: El mensaje está vacío. Error NTF-002.");
+            throw new ValidationException("NTF-002", "Los datos de la notificación son inválidos. El mensaje es obligatorio.");
+        }
+
+        // 2. Validar existencia del usuario en la Users.API (Requerimiento 5.5)
         var userResponse = await _httpClient.GetAsync($"/api/users/{request.UsuarioId}");
         if (!userResponse.IsSuccessStatusCode)
         {
@@ -36,9 +50,11 @@ public class NotificationsService : INotificationsService
             throw new NotFoundException("NTF-001", "El usuario destinatario no fue encontrado.");
         }
 
-        // 2. Crear la entidad de dominio
+        
+        // 3. Crear la entidad de dominio
         var entity = new Notification
         {
+            Id = Guid.NewGuid(), // <-- Generamos el GUID único de la notificación aquí
             UsuarioId = request.UsuarioId,
             Mensaje = request.Mensaje,
             Tipo = request.Tipo,
@@ -51,14 +67,16 @@ public class NotificationsService : INotificationsService
         // LOG DE INFORMACIÓN: Éxito de la operación
         _logger.LogInformation("Notificación {NotificacionId} enviada y registrada con éxito para el usuario {UsuarioId}", created.Id, created.UsuarioId);
 
-        // 3. Mapeo manual de Entidad a DTO
-        return new NotificationResponse(
-            created.Id,
-            created.UsuarioId,
-            created.Mensaje,
-            created.Tipo,
-            created.Estado,
-            created.FechaEnvio);
+        // 4. Mapeo manual de Entidad a DTO
+        return new NotificationResponse
+        {
+            Id = created.Id,
+            UsuarioId = created.UsuarioId,
+            Mensaje = created.Mensaje,
+            Tipo = created.Tipo,
+            Estado = created.Estado,
+            FechaEnvio = created.FechaEnvio
+        };
     }
 
     public async Task<IEnumerable<NotificationResponse>> GetAllByUsuarioIdAsync(Guid usuarioId)
@@ -80,12 +98,14 @@ public class NotificationsService : INotificationsService
         _logger.LogInformation("Se recuperaron {Cantidad} notificaciones para el usuario {UsuarioId}", notifications.Count(), usuarioId);
 
         // Mapeo de colección
-        return notifications.Select(n => new NotificationResponse(
-            n.Id,
-            n.UsuarioId,
-            n.Mensaje,
-            n.Tipo,
-            n.Estado,
-            n.FechaEnvio));
+        return notifications.Select(n => new NotificationResponse
+        {
+            Id = n.Id,
+            UsuarioId = n.UsuarioId,
+            Mensaje = n.Mensaje,
+            Tipo = n.Tipo,
+            Estado = n.Estado,
+            FechaEnvio = n.FechaEnvio
+        }).ToList(); 
     }
 }

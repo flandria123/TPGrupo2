@@ -25,6 +25,27 @@ public class NotificationsController : ControllerBase
     /// </summary>
     /// <remarks>
     /// Valida la existencia del usuario y registra la notificación en estado 'Enviada'.
+    /// 
+    /// Ejemplo de solicitud exitosa:
+    /// 
+    ///     POST /api/notifications/send
+    ///     {
+    ///       "usuarioId": "a1b2c3d4-0000-0000-0000-111122223333",
+    ///       "mensaje": "Su orden #f1e2d3c4 fue confirmada.",
+    ///       "tipo": "Email"
+    ///     }
+    /// 
+    /// Ejemplo de respuesta de error (Usuario no encontrado):
+    /// 
+    ///     {
+    ///       "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+    ///       "title": "Not Found",
+    ///       "status": 404,
+    ///       "detail": "El recurso solicitado no fue encontrado.",
+    ///       "instance": "/api/notifications/send",
+    ///       "errorCode": "NTF-001",
+    ///       "errorMessage": "El usuario destinatario no fue encontrado."
+    ///     }
     /// </remarks>
     /// <response code="201">Notificación creada y enviada correctamente.</response>
     /// <response code="400">Datos inválidos (ErrorCode: NTF-002).</response>
@@ -50,6 +71,21 @@ public class NotificationsController : ControllerBase
     /// <summary>
     /// Obtiene el historial de notificaciones de un usuario.
     /// </summary>
+    /// <remarks>
+    /// Devuelve el listado completo de las notificaciones asociadas al usuario.
+    /// 
+    /// Ejemplo de respuesta de error (Sin notificaciones):
+    /// 
+    ///     {
+    ///       "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+    ///       "title": "Not Found",
+    ///       "status": 404,
+    ///       "detail": "El recurso solicitado no fue encontrado.",
+    ///       "instance": "/api/notifications/a1b2c3d4-0000-0000-0000-111122223333",
+    ///       "errorCode": "NTF-003",
+    ///       "errorMessage": "No se encontraron notificaciones para el usuario."
+    ///     }
+    /// </remarks>
     /// <param name="userId">ID del usuario (GUID).</param>
     /// <response code="200">Lista de notificaciones obtenida correctamente.</response>
     /// <response code="404">No se encontraron notificaciones para el usuario (ErrorCode: NTF-003).</response>

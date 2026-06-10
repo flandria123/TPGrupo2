@@ -3,24 +3,30 @@
     /// <summary>
     /// Representa los datos de una notificación devuelta al cliente.
     /// </summary>
-    public record NotificationResponse(
+    public record NotificationResponse
+    {
+        /// <summary>ID único de la notificación.</summary>
+        /// <example>11112222-3333-4444-5555-666677778888</example>
+        public required Guid Id { get; init; }
 
-        /// <example>f5a1b2c3-4d5e-6f7a-8b9c-0d1e2f3a4b5c</example>
-        Guid Id,
+        /// <summary>ID del usuario destinatario.</summary>
+        /// <example>21b75cee-f8f6-4261-a370-21b16c40967e</example>
+        public required Guid UsuarioId { get; init; }
 
-        /// <example>a1b2c3d4-0000-0000-0000-111122223333</example>
-        Guid UsuarioId,
-
+        /// <summary>Medio de envío utilizado.</summary>
         /// <example>Email</example>
-        string Tipo,
+        public required string Tipo { get; init; }
 
-        /// <example>Tu orden ha sido procesada con éxito.</example>
-        string Mensaje,
+        /// <summary>Contenido de la notificación.</summary>
+        /// <example>Su orden #f1e2d3c4 fue confirmada.</example>
+        public required string Mensaje { get; init; }
 
-        /// <example>Enviado</example>
-        string Estado,
-                
-        /// <example>2026-06-03T14:30:05Z</example>
-        DateTime? FechaEnvio
-    );
+        /// <summary>Estado actual del envío (Pendiente, Enviada, Fallida).</summary>
+        /// <example>Enviada</example>
+        public required string Estado { get; init; }
+
+        /// <summary>Fecha en la que se procesó el envío.</summary>
+        /// <example>2024-03-10T12:01:00Z</example>
+        public required DateTime FechaEnvio { get; init; }
+    }
 }

@@ -2,22 +2,24 @@
 
 namespace NotificationsAPI.DTOs
 {
-    public record CreateNotificationRequest(
-
-        /// <example>a1b2c3d4-0000-0000-0000-111122223333</example>
+    /// <summary>
+    /// Modelo para enviar una nueva notificación.
+    /// </summary>
+    public record CreateNotificationRequest
+    {
+        /// <summary>ID del usuario destinatario.</summary>
+        /// <example>21b75cee-f8f6-4261-a370-21b16c40967e</example>
         [Required(ErrorMessage = "El ID del usuario es obligatorio.")]
-        Guid UsuarioId,
+        public required Guid UsuarioId { get; init; }
 
+        /// <summary>Medio de envío (Email, Push, SMS).</summary>
         /// <example>Email</example>
         [Required(ErrorMessage = "El tipo de notificación es obligatorio.")]
-        string Tipo,
+        public required string Tipo { get; init; }
 
-        /// <example>Confirmación de compra</example>
-        [Required(ErrorMessage = "El asunto es obligatorio.")]
-        string Asunto,
-
-        /// <example>Tu orden ha sido procesada con éxito.</example>
+        /// <summary>Contenido de la notificación (máx. 500 caracteres).</summary>
+        /// <example>Su orden #f1e2d3c4 fue confirmada.</example>
         [Required(ErrorMessage = "El mensaje de la notificación es obligatorio.")]
-        string Mensaje
-    );
+        public required string Mensaje { get; init; }
+    }
 }
