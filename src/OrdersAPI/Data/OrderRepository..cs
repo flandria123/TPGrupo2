@@ -144,5 +144,31 @@ namespace OrdersAPI.Data
                 WHERE order_id = @OrderId",
                 new { OrderId = orderId.ToString() });
         }
+
+        public async Task<IEnumerable<Order>> GetByProductIdAsync(Guid productoId)
+        {
+            using var conn = CreateConnection();
+
+            // Usamos DISTINCT por si (por error) el mismo producto fue agregado dos veces en diferentes líneas de la misma orden.
+            // Usamos "AS" para mapear los nombres con guión bajo a las propiedades PascalCase de tu Entidad Order en C#
+            return await conn.QueryAsync<Order>(@"
+        SELECT DISTINCT 
+            o.id AS Id, 
+            o.usuario_id AS UsuarioId, 
+            o.total AS Total, 
+            o.estado AS Estado, 
+            o.fecha_creacion AS FechaCreacion
+        FROM orders o
+        INNER JOIN order_items oi ON o.id = oi.order_id
+        WHERE oi.producto_id = @ProductoId",
+                new
+                {
+                    // Convertimos a string igual que hiciste en tu AddAsync para que la comparación en SQLite funcione
+                    ProductoId = productoId.ToString()
+                });
+        }
+
+
+
     }
 }

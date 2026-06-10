@@ -230,5 +230,18 @@ namespace OrdersAPI.Controllers
             // Devolvemos 200 OK con el nuevo DTO
             return Ok(response);
         }
+
+        [HttpGet("internal/by-product/{productoId}")]
+        [ApiExplorerSettings(IgnoreApi = true)] // Oculto de Swagger para cumplir el contrato
+        public async Task<IActionResult> GetOrdersByProductInternal(Guid productoId)
+        {
+            // Aquí llamas a tu capa de persistencia de Orders para buscar 
+            // cualquier orden que contenga este productoId en sus Items.
+            var orders = await _orderService.GetOrdersByProductIdAsync(productoId);
+            return Ok(orders);
+        }
+
+
+
     }
 }
