@@ -37,6 +37,20 @@ public static class ServicesExtensions
             .AddCheck<SqliteHealthCheck>("sqlite-db", tags: ["database"])
             .AddCheck<ApiStatusCheck>("api-status", tags: ["api"]);
 
+        
+        services.AddEndpointsApiExplorer();
+
+        
+        services.AddSwaggerGen(options =>
+        {
+            
+            var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+            
+            options.IncludeXmlComments(xmlPath);
+        });
+
         return services;
     }
 }

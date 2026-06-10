@@ -26,31 +26,47 @@ public class ProductService : IProductService
     
     public async Task<IEnumerable<ProductResponse>> GetAllAsync(string? categoria, string? nombre)
     {
+        _logger.LogInformation("Obteniendo listado de productos. Filtros aplicados - Categoría: {Categoria}, Nombre: {Nombre}",
+                           categoria ?? "Ninguno",
+                           nombre ?? "Ninguno");
         var products = await _repository.GetAllAsync(categoria, nombre);
 
-        return products.Select(p => new ProductResponse(
-            p.Id, p.Nombre, p.Descripcion, p.Precio,
-            p.Stock, p.Categoria, p.FechaCreacion
-        ));
-    }
-
-    
-    public async Task<ProductResponse> GetByIdAsync(Guid id)
-    {
-       _logger.LogInformation("Buscando producto con ID {Id}", id);
-        var product = await _repository.GetByIdAsync(id);
-
-        if (product == null)
+        return products.Select(p => new ProductResponse
         {
-            _logger.LogWarning("Intento de obtener producto inexistente: {Id}", id);
-            throw new NotFoundException("PRD-001", "Producto no encontrado.");
-        }
-
-        return new ProductResponse(
-            product.Id, product.Nombre, product.Descripcion, product.Precio,
-            product.Stock, product.Categoria, product.FechaCreacion
-        );
+            Id = p.Id,
+            Nombre = p.Nombre,
+            Descripcion = p.Descripcion,
+            Precio = p.Precio,
+            Stock = p.Stock,
+            Categoria = p.Categoria,
+            FechaCreacion = p.FechaCreacion
+        }).ToList();
     }
+    
+       
+       public async Task<ProductResponse> GetByIdAsync(Guid id)
+       {
+         _logger.LogInformation("Buscando producto con ID {Id}", id);
+          var product = await _repository.GetByIdAsync(id);
+
+         if (product == null)
+         {
+           _logger.LogWarning("Intento de obtener producto inexistente: {Id}", id);
+            throw new NotFoundException("PRD-001", "Producto no encontrado.");
+          }
+
+   
+            return new ProductResponse
+            {
+              Id = product.Id,
+              Nombre = product.Nombre,
+              Descripcion = product.Descripcion,
+             Precio = product.Precio,
+             Stock = product.Stock,
+             Categoria = product.Categoria,
+              FechaCreacion = product.FechaCreacion
+            };
+       }
 
 
     public async Task<ProductResponse> CreateAsync(CreateProductRequest request)
@@ -88,10 +104,16 @@ public class ProductService : IProductService
         _logger.LogInformation("Producto creado con éxito: {Id}", newProduct.Id);
 
         // ── 4. MAPEO AL DTO DE RESPUESTA ──
-        return new ProductResponse(
-            newProduct.Id, newProduct.Nombre, newProduct.Descripcion, newProduct.Precio,
-            newProduct.Stock, newProduct.Categoria, newProduct.FechaCreacion
-        );
+        return new ProductResponse
+        {
+            Id = newProduct.Id,
+            Nombre = newProduct.Nombre,
+            Descripcion = newProduct.Descripcion,
+            Precio = newProduct.Precio,
+            Stock = newProduct.Stock,
+            Categoria = newProduct.Categoria,
+            FechaCreacion = newProduct.FechaCreacion
+        };
     }
 
     public async Task<ProductResponse> UpdateAsync(Guid id, UpdateProductRequest request)
@@ -126,10 +148,16 @@ public class ProductService : IProductService
         await _repository.UpdateAsync(product);
         _logger.LogInformation("Producto {Id} actualizado con éxito", id);
 
-        return new ProductResponse(
-            product.Id, product.Nombre, product.Descripcion, product.Precio,
-            product.Stock, product.Categoria, product.FechaCreacion
-        );
+        return new ProductResponse
+        {
+            Id = product.Id,
+            Nombre = product.Nombre,
+            Descripcion = product.Descripcion,
+            Precio = product.Precio,
+            Stock = product.Stock,
+            Categoria = product.Categoria,
+            FechaCreacion = product.FechaCreacion
+        };
     }
 
     public async Task DeleteAsync(Guid id)

@@ -24,10 +24,7 @@ public partial class Program
         // 2. Servicios de la aplicación (Usa tu extensión) [cite: 135]
         builder.Services.AddAppServices();
 
-        // Agregar Swagger (Necesario para el Req 5.1) [cite: 32]
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
-
+        
         
         var app = builder.Build();
 

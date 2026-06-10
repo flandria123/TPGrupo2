@@ -1,27 +1,36 @@
 ﻿namespace ProductsAPI.DTOs
 {
-    public record ProductResponse(
+    /// <summary>
+    /// Representa los datos de un producto devuelto al cliente.
+    /// </summary>
+    public record ProductResponse
+    {
+        /// <summary>ID único del producto.</summary>
+        /// <example>3fa85f64-5717-4562-b3fc-2c963f66afa6</example>
+        public required Guid Id { get; init; }
 
-    /// <example>3fa85f64-5717-4562-b3fc-2c963f66afa6</example>
-    Guid Id,
+        /// <summary>Nombre del producto.</summary>
+        /// <example>Notebook Dell XPS 15</example>
+        public required string Nombre { get; init; }
 
-    /// <example>Notebook Dell XPS 15</example>
-    string Nombre,
+        /// <summary>Descripción detallada del producto.</summary>
+        /// <example>Laptop 15 pulgadas, 32GB RAM</example>
+        public string? Descripcion { get; init; }
 
-    /// <example>Laptop 15 pulgadas, 32GB RAM</example>
-    string? Descripcion,
+        /// <summary>Precio del producto.</summary>
+        /// <example>1500.00</example>
+        public required decimal Precio { get; init; }
 
-    /// <example>1500.00</example>
-    decimal Precio,
+        /// <summary>Cantidad disponible en stock.</summary>
+        /// <example>10</example>
+        public required int Stock { get; init; }
 
-    /// <example>10</example>
-    int Stock,
+        /// <summary>Categoría a la que pertenece el producto.</summary>
+        /// <example>Electrónica</example>
+        public required string Categoria { get; init; }
 
-    /// <example>Electrónica</example>
-    string Categoria,
-
-    /// <example>2024-01-15T10:30:00Z</example>
-    DateTime FechaCreacion
-
-    );
+        /// <summary>Fecha en la que se creó el registro del producto.</summary>
+        /// <example>2024-01-15T10:30:00Z</example>
+        public required DateTime FechaCreacion { get; init; }
+    }
 }
