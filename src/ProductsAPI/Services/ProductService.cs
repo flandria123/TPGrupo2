@@ -162,40 +162,47 @@ public class ProductService : IProductService
 
     public async Task DeleteAsync(Guid id)
     {
+        // 1. Verificar existencia PRD-001
         var product = await _repository.GetByIdAsync(id);
-
         if (product == null)
         {
             _logger.LogWarning("Intento de eliminar producto inexistente: {Id}", id);
             throw new NotFoundException("PRD-001", "Producto no encontrado.");
         }
-        
-        
+
+        // 2. Comunicación con Orders.API para validar borrado PRD-004
         var ordersClient = _httpClientFactory.CreateClient("OrdersAPI");
 
         try
         {
-            var response = await ordersClient.GetAsync($"/api/orders?productoId={id}");
+            var response = await ordersClient.GetAsync($"/api/orders/internal/by-product/{id}");
 
-            if (response.IsSuccessStatusCode)
+            
+            // Si Orders.API responde 404 o 500, esto lanza un error y frena el borrado cayendo al catch.
+            response.EnsureSuccessStatusCode();
+
+            var ordenes = await response.Content.ReadFromJsonAsync<IEnumerable<OrderStateDto>>();
+
+            if (ordenes != null && ordenes.Any(o => o.Estado == "Pendiente" || o.Estado == "Confirmada"))
             {
-                var ordenes = await response.Content.ReadFromJsonAsync<IEnumerable<dynamic>>();
-
-                if (ordenes != null && ordenes.Any(o => (string)o.estado == "Pendiente" || (string)o.estado == "Confirmada"))
-                {
-                    _logger.LogWarning("No se puede eliminar el producto {Id} porque tiene órdenes activas.", id);
-                    throw new BusinessRuleException("PRD-004", "El producto tiene órdenes activas y no puede eliminarse.");
-                }
+                _logger.LogWarning("No se puede eliminar el producto {Id} porque tiene órdenes activas.", id);
+                throw new BusinessRuleException("PRD-004", "El producto tiene órdenes activas y no puede eliminarse.");
             }
         }
         catch (Exception ex) when (ex is not BusinessRuleException)
         {
+            // Ahora, si el endpoint no existe o falla, cae aquí y aborta el borrado con un PRD-005
             _logger.LogError(ex, "Error al comunicarse con Orders.API para validar borrado del producto {Id}.", id);
             throw new Exception("Error de comunicación entre microservicios.", ex);
         }
 
+
+        // 3. Borrado definitivo si pasó las validaciones
         await _repository.DeleteAsync(id);
         _logger.LogInformation("Producto {Id} eliminado con éxito", id);
     }
-}
 
+    
+
+}
+internal record OrderStateDto([property: System.Text.Json.Serialization.JsonPropertyName("estado")] string Estado);
