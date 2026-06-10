@@ -58,6 +58,7 @@ namespace Users.API.Controllers
         [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult<UserResponse>> GetById(Guid id)
         {
             var user = await _userService.GetByIdAsync(id);
