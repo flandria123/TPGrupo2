@@ -136,11 +136,12 @@ public class OrderService : IOrderService
         await _repository.UpdateAsync(order);
 
         // Retornamos el DTO exacto que pide la cátedra para la respuesta 200 OK
-        return new UpdateStatusResponse(
-            Id: order.Id,
-            Estado: order.Estado,
-            FechaActualizacion: DateTime.UtcNow
-        );
+        return new UpdateStatusResponse
+        {
+            Id = order.Id,
+            Estado = order.Estado,
+            FechaActualizacion = DateTime.UtcNow
+        };
     }
 
 

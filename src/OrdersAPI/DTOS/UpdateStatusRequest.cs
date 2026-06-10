@@ -2,9 +2,14 @@
 
 namespace OrdersAPI.DTOs;
 
-public class UpdateStatusRequest
+/// <summary>
+/// Objeto con el nuevo estado a asignar a la orden.
+/// </summary>
+public record UpdateStatusRequest
 {
-    // Usamos DataAnnotations para que .NET valide automáticamente que no venga vacío
+    /// <summary>Nuevo estado de la orden (Pendiente, Confirmada, Enviada, Entregada, Cancelada).</summary>
+    /// <example>Confirmada</example>
     [Required(ErrorMessage = "El campo Estado es obligatorio.")]
-    public string Estado { get; set; } = string.Empty;
+    public required string Estado { get; init; }
 }
+

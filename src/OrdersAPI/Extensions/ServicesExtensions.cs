@@ -15,7 +15,12 @@ namespace OrdersAPI.Extensions
         public static void AddAppServices(this IServiceCollection services)
         {
             // 1. SOPORTE PARA CONTROLADORES REST
-            services.AddControllers();
+            services.AddControllers()
+            .ConfigureApiBehaviorOptions(options =>
+            {
+                // Apagamos el filtro automático para que el ValidationExceptionHandler tome el control
+                options.SuppressModelStateInvalidFilter = true;
+            });
 
             // 2. DOCUMENTACIÓN INTERACTIVA (Swagger con comentarios XML)
             services.AddEndpointsApiExplorer();
