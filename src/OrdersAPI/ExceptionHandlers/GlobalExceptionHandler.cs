@@ -31,7 +31,7 @@ namespace OrdersAPI.ExceptionHandlers
                 status = 500,
                 detail = "Se ha producido un error interno en el servidor. Contacte al administrador.",
                 instance = context.Request.Path.Value,
-                errorCode = "SYS-500", // Código genérico para mantener la estructura del JSON
+                errorCode = "ORD-007", 
                 errorMessage = "Error interno inesperado."
             }, cancellationToken);
 

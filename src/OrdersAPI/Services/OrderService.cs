@@ -122,20 +122,34 @@ public class OrderService : IOrderService
 
     public async Task<UpdateStatusResponse> UpdateStatusAsync(Guid id, string nuevoEstado)
     {
-        var order = await GetOrderEntityByIdAsync(id);
-
-        // --- VALIDACIÓN DE REGLA DE NEGOCIO (ORD-006) - HABILITADA ---
-        if (order.Estado == "Cancelada" || order.Estado == "Completada")
+        // ── 1. VALIDACIÓN FAIL-FAST (ORD-002) ──
+        if (string.IsNullOrWhiteSpace(nuevoEstado))
         {
-            throw new BusinessRuleException("ORD-006", "No se puede modificar el estado de una orden que ya se encuentra en estado Cancelada o Completada.");
+            throw new ValidationException("ORD-002", "El estado no puede estar vacío.");
         }
 
-        order.Estado = nuevoEstado;
+        // ── 2. OBTENER LA ORDEN ──
+        var order = await GetOrderEntityByIdAsync(id);
 
-        // Actualización real en la base de datos habilitada
+        // ── 3. VALIDACIÓN DE EXISTENCIA (ORD-001) ──
+        // (Asegúrate de tener esto aquí o dentro de tu método GetOrderEntityByIdAsync)
+        if (order == null)
+        {
+            throw new NotFoundException("ORD-001", "Orden no encontrada.");
+        }
+
+        // ── 4. VALIDACIÓN DE REGLA DE NEGOCIO (ORD-006) ──
+        // Corregido a "Entregada" según el Apéndice A del TP
+        if (order.Estado == "Cancelada" || order.Estado == "Entregada")
+        {
+            throw new BusinessRuleException("ORD-006", $"No se puede modificar el estado de una orden que ya se encuentra en estado {order.Estado}.");
+        }
+
+        // ── 5. ACTUALIZACIÓN ──
+        order.Estado = nuevoEstado;
         await _repository.UpdateAsync(order);
 
-        // Retornamos el DTO exacto que pide la cátedra para la respuesta 200 OK
+        // ── 6. RESPUESTA EXACTA SEGÚN CONTRATO ──
         return new UpdateStatusResponse
         {
             Id = order.Id,
@@ -153,6 +167,8 @@ public class OrderService : IOrderService
     private async Task<Order> GetOrderEntityByIdAsync(Guid id)
     {
         // Búsqueda real en base de datos habilitada
+
+        
         Order? order = await _repository.GetByIdAsync(id);
 
         if (order == null)
