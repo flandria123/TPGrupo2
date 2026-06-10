@@ -35,10 +35,10 @@ public class NotificationsService : INotificationsService
             throw new ValidationException("NTF-002", "Los datos de la notificación son inválidos. El tipo no puede estar vacío y debe ser 'Email', 'Push' o 'SMS'.");
         }
 
-        if (string.IsNullOrWhiteSpace(request.Mensaje))
+        if (string.IsNullOrWhiteSpace(request.Mensaje) || request.Mensaje.Length > 500)
         {
-            _logger.LogWarning("Validación fallida: El mensaje está vacío. Error NTF-002.");
-            throw new ValidationException("NTF-002", "Los datos de la notificación son inválidos. El mensaje es obligatorio.");
+            _logger.LogWarning("Validación fallida: El mensaje está vacío o excede los 500 caracteres. Error NTF-002.");
+            throw new ValidationException("NTF-002", "Los datos de la notificación son inválidos. El mensaje es obligatorio y no puede superar los 500 caracteres.");
         }
 
         // 2. Validar existencia del usuario en la Users.API (Requerimiento 5.5)
