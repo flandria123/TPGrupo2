@@ -4,29 +4,29 @@
 **Institución:** Universidad de Buenos Aires (UBA)  
 **Año:** 2026  
 
-## 👥 Integrantes del Grupo
+##  Integrantes del Grupo
 * Christian Gabriel Jackson
 * Tomas Ponti
 * Tomas Ustimczuk
 
 ---
 
-## 📝 Descripción General
-Este proyecto implementa un sistema de E-Commerce basado en una arquitectura de microservicios distribuidos [cite: 1]. La solución expone 5 REST APIs independientes desarrolladas en **C# con .NET Core 8**, cumpliendo con los contratos de diseño, manejo de excepciones de dominio, y observabilidad exigidos por la cátedra [cite: 1, 2].
+##  Descripción General
+Este proyecto implementa un sistema de E-Commerce basado en una arquitectura de microservicios distribuidos. La solución expone 5 REST APIs independientes desarrolladas en **C# con .NET Core 8**, cumpliendo con los contratos de diseño, manejo de excepciones de dominio, y observabilidad exigidos por la cátedra.
 
-## 🏗️ Arquitectura y Tecnologías
+##  Arquitectura y Tecnologías
 El proyecto fue construido siguiendo estrictas reglas de separación de responsabilidades y buenas prácticas:
-* **Framework:** ASP.NET Core 8 (Minimal APIs / Controllers) [cite: 1, 36].
-* **Persistencia:** Base de datos embebida **SQLite** mapeada a través del micro-ORM **Dapper**. No requiere instalación de servidor externo [cite: 62].
-* **Comunicación HTTP:** Implementación de `IHttpClientFactory` para la comunicación segura y eficiente entre microservicios (Ej: Cart -> Products) [cite: 36, 82].
-* **Manejo de Errores Global:** Ausencia total de bloques `try-catch` en la capa de negocio. Se delega la captura a un `IExceptionHandler` global que formatea las respuestas bajo el estándar **RFC 7231 Problem Details**, utilizando excepciones de dominio (`NotFoundException`, `BusinessRuleException`) [cite: 44, 47, 83].
+* **Framework:** ASP.NET Core 10 (Minimal APIs / Controllers).
+* **Persistencia:** Base de datos embebida **SQLite** mapeada a través del micro-ORM **Dapper**. No requiere instalación de servidor externo.
+* **Comunicación HTTP:** Implementación de `IHttpClientFactory` para la comunicación segura y eficiente entre microservicios (Ej: Cart -> Products).
+* **Manejo de Errores Global:** Ausencia total de bloques `try-catch` en la capa de negocio. Se delega la captura a un `IExceptionHandler` global que formatea las respuestas bajo el estándar **RFC 7231 Problem Details**, utilizando excepciones de dominio (`NotFoundException`, `BusinessRuleException`).
 * **Observabilidad:** 
-  * Logging estructurado con **Serilog** (Doble Sink: Consola para errores y Archivo `audit.log` para tracking de requests) [cite: 54, 56].
-  * Monitoreo en tiempo real con **Health Checks** (`/health` y `/health-ui`) [cite: 34, 69].
+  * Logging estructurado con **Serilog** (Doble Sink: Consola para errores y Archivo `audit.log` para tracking de requests).
+  * Monitoreo en tiempo real con **Health Checks** (`/health` y `/health-ui`) .
 
 ---
 
-## 🔌 Mapeo de Puertos y Servicios
+##  Mapeo de Puertos y Servicios
 Cada microservicio corre de forma independiente en su propio puerto local:
 
 | Microservicio | Puerto Local | Swagger UI | Health Check UI |
@@ -39,11 +39,11 @@ Cada microservicio corre de forma independiente en su propio puerto local:
 
 ---
 
-## ⚙️ Prerrequisitos
+##  Prerrequisitos
 No es necesario instalar motores de bases de datos complejos. El proyecto requiere únicamente:
-* **SDK de .NET 8** instalado.
+* **SDK de .NET 10** instalado.
 * **Visual Studio** (o IDE compatible).
-* Las dependencias de NuGet se restaurarán automáticamente al compilar. Los paquetes principales utilizados son [cite: 36, 74, 75]:
+* Las dependencias de NuGet se restaurarán automáticamente al compilar. Los paquetes principales utilizados son:
   * `Microsoft.Data.Sqlite` y `Dapper`
   * `Serilog.AspNetCore`, `Serilog.Sinks.Console`, `Serilog.Sinks.File`
   * `Swashbuckle.AspNetCore`
@@ -52,8 +52,8 @@ No es necesario instalar motores de bases de datos complejos. El proyecto requie
 
 ---
 
-## 🚀 Pasos de Ejecución
-La solución está configurada para inicializar y crear las bases de datos `app.db` automáticamente de forma local durante el arranque [cite: 64].
+##  Pasos de Ejecución
+La solución está configurada para inicializar y crear las bases de datos `app.db` automáticamente de forma local durante el arranque.
 
 Para probar el flujo completo del E-Commerce (comunicación entre APIs), es necesario levantar los 5 microservicios simultáneamente:
 
@@ -64,11 +64,11 @@ Para probar el flujo completo del E-Commerce (comunicación entre APIs), es nece
 5. Cambiar la acción de los 5 proyectos (`Products.API`, `Users.API`, `Orders.API`, `Cart.API`, `Notifications.API`) al valor **"Iniciar"** (Start).
 6. Hacer clic en "Aceptar".
 7. Presionar **F5** o hacer clic en el botón de **"Iniciar"** en la barra superior.
-8. Se abrirán 5 ventanas de consola (Logs de Serilog) y 5 pestañas en tu navegador apuntando a la documentación de Swagger de cada API [cite: 54, 73].
+8. Se abrirán 5 ventanas de consola (Logs de Serilog) y 5 pestañas en tu navegador apuntando a la documentación de Swagger de cada API.
 
 ---
 
-## 🗺️ Diagrama de Arquitectura Lógico
+##  Diagrama de Arquitectura Lógico
 
 ```mermaid
 graph TD
@@ -144,7 +144,7 @@ graph TD
 ---
 
 ## 3. Documentación de Errores (Swagger UI)
-A continuación se detallan las capturas de pantalla de las respuestas de error estructuradas con código y mensaje, tal como lo exige el catálogo del dominio [cite: 3, 38].
+A continuación se detallan las capturas de pantalla de las respuestas de error estructuradas con código y mensaje, tal como lo exige el catálogo del dominio.
 
 ### Products API
 
