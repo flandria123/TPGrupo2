@@ -70,7 +70,7 @@ Para probar el flujo completo del E-Commerce (comunicación entre APIs), es nece
 
 ##  Diagrama de Arquitectura Lógico
 
-![Diagrama de Arquitectura de Microservicios UBA](docs/Diagrama/DiagramaDeArquitectura.png)
+![Diagrama de Arquitectura de Microservicios UBA](docs/Diagramas/DiagramaDeArquitectura.png)
 
 ---
 
