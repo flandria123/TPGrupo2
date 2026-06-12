@@ -102,10 +102,7 @@ graph TD
     OrdersAPI -.->|Valida Usuario| UsersAPI
     CartAPI -.->|Consulta Stock| ProductsAPI
     
-    %% NUEVA FLECHA HORIZONTAL: Notificaciones validando al usuario
-    NotificationsAPI -.->|Valida Usuario| UsersAPI
-
-    %% NUEVA FLECHA HORIZONTAL: Notificaciones validando al usuario
+    %% Validación de Notificaciones al usuario (NTF-001)
     NotificationsAPI -.->|Valida Usuario| UsersAPI
     
     %% VALIDACIÓN DE ELIMINACIÓN DE PRODUCTO (PRD-004)
