@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ProductsAPI.DTOs;
 using ProductsAPI.Services;
+using ProductsAPI.Exceptions;
 
 namespace ProductsAPI.Controllers;
 
@@ -158,6 +159,11 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ProductResponse>> Create([FromBody] CreateProductRequest request)
     {
+        if (!ModelState.IsValid)
+        {
+            throw new ValidationException("PRD-002", "Los datos del producto son inválidos.");
+        }
+
         var product = await _productService.CreateAsync(request);
         return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
     }
@@ -226,6 +232,11 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ProductResponse>> Update(Guid id, [FromBody] UpdateProductRequest request)
     {
+        if (!ModelState.IsValid)
+        {
+            throw new ValidationException("PRD-002", "Los datos del producto son inválidos.");
+        }
+
         var product = await _productService.UpdateAsync(id, request);
         return Ok(product);
     }
